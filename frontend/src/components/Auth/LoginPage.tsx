@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/ui/button';
+import { APP_NAME, Wordmark } from '@/components/Brand';
 import { Input } from '@/components/ui/input';
 
 export function LoginPage() {
@@ -29,14 +30,13 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slack-hover">
       {/* Header */}
       <div className="mb-8 text-center">
-        <div className="mb-6 flex items-center justify-center gap-2">
-          <img src="/favicon-192.png" alt="Slawk" className="h-12 w-12 rounded-lg" />
-          <span className="text-3xl font-bold text-slack-primary">slawk</span>
+        <div className="mb-6 flex items-center justify-center">
+          <Wordmark />
         </div>
-        <h1 className="text-4xl font-bold text-slack-primary">Sign in to Slawk</h1>
+        <h1 className="text-4xl font-bold text-slack-primary">Sign in to {APP_NAME}</h1>
         <p className="mt-2 text-gray-600">
           We suggest using the <strong>email address you use at work.</strong>
         </p>
@@ -81,7 +81,7 @@ export function LoginPage() {
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          New to Slawk?{' '}
+          New to {APP_NAME}?{' '}
           <Link to="/register" className="text-slack-link hover:underline">
             Create an account
           </Link>

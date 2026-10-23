@@ -1,11 +1,11 @@
 {
-  "name": "Slawk",
-  "short_name": "Slawk",
+  "name": "Teamverktøy",
+  "short_name": "Teamverktøy",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4A154B",
+  "background_color": "#F5F4F0",
+  "theme_color": "#0F1118",
   "icons": [
     {
       "src": "/pwa-icon-192.png",

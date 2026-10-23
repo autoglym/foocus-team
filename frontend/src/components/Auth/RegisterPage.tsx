@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/ui/button';
+import { Wordmark } from '@/components/Brand';
 import { Input } from '@/components/ui/input';
 import { validateInvite } from '@/lib/api';
 
@@ -50,12 +51,11 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slack-hover">
       {/* Header */}
       <div className="mb-8 text-center">
-        <div className="mb-6 flex items-center justify-center gap-2">
-          <img src="/favicon-192.png" alt="Slawk" className="h-12 w-12 rounded-lg" />
-          <span className="text-3xl font-bold text-slack-primary">slawk</span>
+        <div className="mb-6 flex items-center justify-center">
+          <Wordmark />
         </div>
         <h1 className="text-4xl font-bold text-slack-primary">Create your account</h1>
         <p className="mt-2 text-gray-600">

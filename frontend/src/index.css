@@ -5,93 +5,80 @@
   color-scheme: light only;
 }
 
-/* Lato font - Slack uses Slack-Lato which is based on Lato */
-@font-face {
-  font-family: 'Lato';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/lato-400.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Lato';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/lato-700.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Lato';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('/fonts/lato-900.woff2') format('woff2');
-}
+/* Fonts — Foocus design system: Inter (body), Manrope (headings/brand).
+   Self-hosted via @fontsource (imported in main.tsx); the CSP only allows
+   fonts from our own origin. */
 
 /* ──────────────────────────────────────────────────────────
-   Slack Design Tokens — single source of truth for all colors.
-   These generate Tailwind utilities: text-slack-primary,
-   bg-slack-hover, border-slack-border, etc.
+   Design tokens — single source of truth for all colors.
+   Values follow the Foocus design system: warm "parchment" light
+   surfaces for content, the Foocus dark navy for the sidebar,
+   cerulean accent (#346F91), gold, positive and negative.
+   The token names are kept from Slawk so components need no changes:
+   they generate Tailwind utilities like text-slack-primary.
    ────────────────────────────────────────────────────────── */
 @theme {
-  /* Text */
-  --color-slack-primary: #1D1C1D;
-  --color-slack-secondary: #616061;
+  --font-sans: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "Manrope Variable", "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Links */
-  --color-slack-link: #1264A3;
-  --color-slack-link-hover: #0d4f8b;
+  /* Text — Foocus ink / muted / faint */
+  --color-slack-primary: #0F1118;
+  --color-slack-secondary: #625E55;
 
-  /* Surface / Background */
-  --color-slack-hover: #F8F8F8;
-  --color-slack-active-tab: #F0F0F0;
-  --color-slack-pinned: #FEF9ED;
-  --color-slack-success: #E3F4EC;
-  --color-slack-highlight: #E8F5FA;
-  --color-slack-code-bg: rgba(29, 28, 29, 0.08);
+  /* Links — Foocus accent text */
+  --color-slack-link: #2A5A76;
+  --color-slack-link-hover: #1F4459;
 
-  /* Borders */
-  --color-slack-border: #E0E0E0;
-  --color-slack-border-light: rgba(29, 28, 29, 0.13);
-  --color-slack-border-dark: rgba(29, 28, 29, 0.3);
+  /* Surface / Background — Foocus parchment */
+  --color-slack-hover: #F5F4F0;
+  --color-slack-active-tab: #EEEDE8;
+  --color-slack-pinned: #FCF6E5;
+  --color-slack-success: #DBECE4;
+  --color-slack-highlight: #EAF0F4;
+  --color-slack-code-bg: rgba(15, 17, 24, 0.06);
 
-  /* Buttons */
-  --color-slack-btn: #007a5a;
-  --color-slack-btn-hover: #005e46;
+  /* Borders — Foocus line */
+  --color-slack-border: #E2E0D9;
+  --color-slack-border-light: rgba(15, 17, 24, 0.10);
+  --color-slack-border-dark: rgba(15, 17, 24, 0.28);
 
-  /* Sidebar */
-  --color-slack-aubergine: #3F0E40;
-  --color-slack-sidebar: #4A154B;
-  --color-slack-sidebar-dark: #39063A;
-  --color-slack-purple: #611f69;
-  --color-slack-sidebar-hover: #58427C;
+  /* Buttons — Foocus accent */
+  --color-slack-btn: #346F91;
+  --color-slack-btn-hover: #2A5A76;
 
-  /* Status / Indicators */
-  --color-slack-badge: #CD2553;
-  --color-slack-pin-indicator: #E8912D;
-  --color-slack-code-inline: #E01E5A;
+  /* Sidebar — Foocus dark theme */
+  --color-slack-aubergine: #0B0D14;
+  --color-slack-sidebar: #0F1118;
+  --color-slack-sidebar-dark: #0B0D14;
+  --color-slack-purple: #346F91;
+  --color-slack-sidebar-hover: #1A1E27;
 
-  /* Mentions */
-  --color-slack-mention: rgba(29, 155, 209, 0.1);
-  --color-slack-mention-hover: rgba(29, 155, 209, 0.2);
+  /* Status / Indicators — Foocus negative / gold */
+  --color-slack-badge: #A33843;
+  --color-slack-pin-indicator: #D4A93A;
+  --color-slack-code-inline: #A33843;
+
+  /* Mentions — Foocus accent wash */
+  --color-slack-mention: rgba(52, 111, 145, 0.10);
+  --color-slack-mention-hover: rgba(52, 111, 145, 0.18);
 
   /* Text — muted / hint / disabled */
-  --color-slack-muted: #616061;
-  --color-slack-hint: #868686;
-  --color-slack-disabled: #ABABAD;
+  --color-slack-muted: #625E55;
+  --color-slack-hint: #8F8A7E;
+  --color-slack-disabled: #A8A398;
 
-  /* Error / Danger */
-  --color-slack-error: #D72B3F;
-  --color-slack-error-bg: #FFF0F0;
-  --color-slack-error-border: #F5C6CB;
+  /* Error / Danger — Foocus negative */
+  --color-slack-error: #A33843;
+  --color-slack-error-bg: #F8ECED;
+  --color-slack-error-border: #E8C3C7;
 
   /* Form borders */
-  --color-slack-input-border: #BCBCBC;
+  --color-slack-input-border: #C9C6BC;
 
   /* File type icons */
-  --color-slack-file-image: #1264A3;
-  --color-slack-file-pdf: #D72B3F;
-  --color-slack-file-archive: #9B870C;
+  --color-slack-file-image: #346F91;
+  --color-slack-file-pdf: #A33843;
+  --color-slack-file-archive: #B08A2E;
 }
 
 /* Non-color design tokens */
@@ -128,8 +115,13 @@ html, body, #root {
   width: 100%;
 }
 
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
 body {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.46668;
   letter-spacing: -0.01em;

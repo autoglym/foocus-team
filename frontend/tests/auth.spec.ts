@@ -53,8 +53,8 @@ test.describe('Authentication', () => {
     const email = uniqueEmail();
     await register(page, 'Login Tester', email, TEST_PASSWORD);
 
-    // The Slawk workspace header should be visible
-    await expect(page.locator('text=Slawk')).toBeVisible();
+    // The Teamverktøy workspace header should be visible
+    await expect(page.getByTestId('sidebar').getByText('Teamverktøy')).toBeVisible();
 
     // Sidebar channel list should be visible
     await expect(page.getByTestId('sidebar')).toBeVisible();

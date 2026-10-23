@@ -30,6 +30,7 @@ import type { Channel } from '@/lib/types';
 import { getChannels } from '@/lib/api';
 import type { AuthUser } from '@/lib/api';
 import { useMobileStore } from '@/stores/useMobileStore';
+import { APP_NAME, FoocusMark } from '@/components/Brand';
 // HuddleBar moved to global render in App.tsx
 
 export function Sidebar() {
@@ -153,7 +154,7 @@ export function Sidebar() {
       <div className="flex w-[70px] flex-col items-center bg-slack-sidebar-dark pt-[max(0.5rem,env(safe-area-inset-top))] gap-0">
         {/* Workspace Icon - 36x36px */}
         <button className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden hover:rounded-xl transition-all">
-          <img src="/favicon-192.png" alt="Slawk" className="h-full w-full object-cover" />
+          <FoocusMark className="h-full w-full" />
         </button>
 
         {/* Nav Items - 52x68px each with icon + label */}
@@ -282,7 +283,7 @@ export function Sidebar() {
       <div data-testid="sidebar" className="flex w-[260px] flex-col bg-slack-sidebar text-white/70">
         {/* Workspace Header - 44px height, 6px 16px padding */}
         <div className="flex h-[44px] items-center justify-between border-b border-white/10 px-4 py-[6px] mt-[env(safe-area-inset-top)]">
-          <span className="text-[18px] font-bold text-white">Slawk</span>
+          <span className="font-heading text-[17px] font-bold tracking-tight text-white">{APP_NAME}</span>
           <button onClick={handleOpenAddTeammates} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
             <SquarePen className="h-4 w-4" />
           </button>
