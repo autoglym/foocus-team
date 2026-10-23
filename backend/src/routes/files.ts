@@ -106,6 +106,13 @@ const INLINE_SAFE_TYPES = new Set([
   'video/mp4', 'video/webm',
 ]);
 
+// Multer (busboy) decodes multipart filenames as latin1, so UTF-8 names like
+// "møte.pdf" arrive as "mÃ¸te.pdf". Re-decode when the bytes are valid UTF-8.
+function decodeMultipartFilename(name: string): string {
+  const decoded = Buffer.from(name, 'latin1').toString('utf8');
+  return decoded.includes('\uFFFD') ? name : decoded;
+}
+
 // RFC 5987 Content-Disposition filename encoding
 function contentDisposition(disposition: string, filename: string): string {
   const encoded = encodeURIComponent(filename).replace(/['()]/g, escape);
@@ -243,7 +250,7 @@ router.post('/', authMiddleware, uploadLimiter, (req: AuthRequest, res: Response
     }
 
     // Sanitize and truncate original filename
-    const sanitizedOriginalName = file.originalname
+    const sanitizedOriginalName = decodeMultipartFilename(file.originalname)
       .replace(/[\x00-\x1F\x7F]/g, '') // strip control characters
       .slice(0, 255);
 

@@ -719,6 +719,18 @@ describe('File Uploads', () => {
     });
   });
 
+  describe('Filename encoding', () => {
+    it('should keep UTF-8 characters in the original filename', async () => {
+      const res = await request(app)
+        .post('/files')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from('innhold'), { filename: 'møtereferat-æøå.txt', contentType: 'text/plain' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.originalName).toBe('møtereferat-æøå.txt');
+    });
+  });
+
   describe('Internal storage path non-disclosure', () => {
     it('should not expose storagePath in upload response', async () => {
       const res = await request(app)
