@@ -1,3 +1,5 @@
+// Load .env before any other module reads process.env (ESM imports are hoisted)
+import 'dotenv/config';
 import { createServer } from 'http';
 import app from './app.js';
 import { initializeWebSocket } from './websocket/index.js';
