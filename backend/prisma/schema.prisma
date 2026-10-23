@@ -156,7 +156,7 @@ model File {
   mimetype     String   @db.VarChar(127)
   size         Int
   url          String
-  gcsPath      String?
+  storagePath  String?
   userId       Int
   messageId    Int?
   dmId         Int?

@@ -6,7 +6,6 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
-import { Storage } from '@google-cloud/storage';
 import prisma from '../db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { requireFileAccess, verifyFileAccess } from '../middleware/authorize.js';
@@ -14,23 +13,19 @@ import { AuthRequest } from '../types.js';
 import { parseIntParam } from '../utils/params.js';
 import { logError } from '../utils/logger.js';
 import { JWT_SECRET } from '../config.js';
+import * as fileStorage from '../services/fileStorage.js';
 
 // Maximum file size in MB (configurable via environment variable, defaults to 50MB)
 const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || '50', 10);
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 // Strip internal storage details from file records before sending to clients.
-// The gcsPath reveals the GCS bucket structure and could enable direct bucket
-// access if the bucket has misconfigured ACLs.
+// The storagePath reveals the bucket structure and could enable direct bucket
+// access if the bucket policies are ever misconfigured.
 function stripInternalFields(file: any): any {
-  const { gcsPath, ...safe } = file;
+  const { storagePath, ...safe } = file;
   return safe;
 }
-
-// GCS setup - only initialize if bucket name is configured
-const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
-const gcsStorage = GCS_BUCKET_NAME ? new Storage() : null;
-const bucket = gcsStorage && GCS_BUCKET_NAME ? gcsStorage.bucket(GCS_BUCKET_NAME) : null;
 
 const router = Router();
 
@@ -110,24 +105,6 @@ const INLINE_SAFE_TYPES = new Set([
   'audio/mpeg', 'audio/ogg', 'audio/mp4', 'audio/webm', 'audio/aac',
   'video/mp4', 'video/webm',
 ]);
-
-// Helper to upload to GCS
-async function uploadToGCS(localPath: string, filename: string, mimetype: string): Promise<{ gcsPath: string }> {
-  if (!bucket) throw new Error('GCS not configured');
-
-  // Sanitize filename for GCS path (strip path separators and control chars)
-  const safeName = filename.replace(/[/\\:\x00-\x1F\x7F]/g, '_').slice(0, 255);
-  const gcsPath = `uploads/${Date.now()}-${safeName}`;
-  await bucket.upload(localPath, {
-    destination: gcsPath,
-    metadata: { contentType: mimetype },
-  });
-
-  // Delete local temp file after GCS upload
-  fs.unlinkSync(localPath);
-
-  return { gcsPath };
-}
 
 // RFC 5987 Content-Disposition filename encoding
 function contentDisposition(disposition: string, filename: string): string {
@@ -248,25 +225,21 @@ router.post('/', authMiddleware, uploadLimiter, (req: AuthRequest, res: Response
       }
     }
 
-    let url: string;
-    let gcsPath: string | null = null;
+    // URL will be updated after creation to use authenticated download endpoint
+    const url = '';
+    let storagePath: string | null = null;
 
-    // Upload to GCS if configured, otherwise use local storage
-    if (bucket) {
+    // Upload to Supabase Storage if configured, otherwise keep the file on local disk
+    if (fileStorage.isRemoteStorageEnabled) {
       try {
-        const gcsResult = await uploadToGCS(file.path, file.originalname, file.mimetype);
-        url = ''; // Will be set to download endpoint URL after record creation
-        gcsPath = gcsResult.gcsPath;
-      } catch (gcsError) {
-        logError('GCS upload failed', gcsError);
+        ({ storagePath } = await fileStorage.uploadFile(file.path, file.mimetype));
+      } catch (storageError) {
+        logError('Supabase Storage upload failed', storageError);
         // Clean up local temp file
         if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
         res.status(502).json({ error: 'File storage unavailable' });
         return;
       }
-    } else {
-      // URL will be updated after creation to use authenticated download endpoint
-      url = '';
     }
 
     // Sanitize and truncate original filename
@@ -281,7 +254,7 @@ router.post('/', authMiddleware, uploadLimiter, (req: AuthRequest, res: Response
         mimetype: file.mimetype,
         size: file.size,
         url,
-        gcsPath,
+        storagePath,
         userId,
         messageId,
       },
@@ -384,23 +357,26 @@ router.get('/:id/download', (req: AuthRequest, res: Response, next) => {
   try {
     const file = req.file;
 
-    // GCS files: stream through backend (ADC on Cloud Run lacks signing key for getSignedUrl)
-    if (file.gcsPath && bucket) {
+    // Supabase Storage files: redirect to a short-lived signed URL (access was
+    // checked above; the bucket itself is private)
+    if (file.storagePath) {
+      if (!fileStorage.isRemoteStorageEnabled) {
+        res.status(503).json({ error: 'File storage unavailable' });
+        return;
+      }
       const forceAttachment = !INLINE_SAFE_TYPES.has(file.mimetype);
-      const disposition = (req.query.dl === '1' || forceAttachment) ? 'attachment' : 'inline';
-
-      res.setHeader('Content-Type', file.mimetype);
-      res.setHeader('Content-Disposition', contentDisposition(disposition, file.originalName));
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('Cache-Control', 'private, max-age=3600');
-
-      const gcsFile = bucket.file(file.gcsPath);
-      const stream = gcsFile.createReadStream();
-      stream.on('error', (err) => {
-        logError('GCS stream error', err);
-        if (!res.headersSent) res.status(500).json({ error: 'Failed to read file from storage' });
-      });
-      stream.pipe(res);
+      const asAttachment = req.query.dl === '1' || forceAttachment;
+      try {
+        const signedUrl = await fileStorage.createSignedUrl(
+          file.storagePath,
+          asAttachment ? file.originalName.replace(/[/\\:\x00-\x1F\x7F]/g, '_') : undefined,
+        );
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.redirect(302, signedUrl);
+      } catch (err) {
+        logError('Supabase Storage signed URL error', err);
+        res.status(502).json({ error: 'Failed to read file from storage' });
+      }
       return;
     }
 
@@ -491,12 +467,12 @@ router.delete('/:id', authMiddleware, async (req: AuthRequest, res: Response) =>
     }
 
     // Delete from storage
-    if (file.gcsPath && bucket) {
-      // Delete from GCS
+    if (file.storagePath) {
+      // Delete from Supabase Storage
       try {
-        await bucket.file(file.gcsPath).delete();
+        await fileStorage.deleteFile(file.storagePath);
       } catch (err) {
-        logError('Failed to delete from GCS', err);
+        logError('Failed to delete from Supabase Storage', err);
       }
     } else {
       // Delete local file

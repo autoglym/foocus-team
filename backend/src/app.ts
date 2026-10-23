@@ -27,6 +27,7 @@ import pushRoutes from './routes/push.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authMiddleware } from './middleware/auth.js';
 import { JWT_SECRET } from './config.js';
+import { signedUrlSource } from './services/fileStorage.js';
 
 const app = express();
 
@@ -37,9 +38,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      'img-src': ["'self'", 'blob:', ...(process.env.NODE_ENV !== 'production' ? ['https://randomuser.me'] : []), ...(process.env.GCS_BUCKET_NAME ? [`https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}`] : [])],
+      'img-src': ["'self'", 'blob:', ...(process.env.NODE_ENV !== 'production' ? ['https://randomuser.me'] : []), ...(signedUrlSource ? [signedUrlSource] : [])],
       'connect-src': ["'self'", 'wss:', 'ws:'],
-      'media-src': ["'self'", 'blob:', ...(process.env.GCS_BUCKET_NAME ? [`https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}`] : [])],
+      'media-src': ["'self'", 'blob:', ...(signedUrlSource ? [signedUrlSource] : [])],
     },
   },
   crossOriginEmbedderPolicy: 'credentialless' as any,

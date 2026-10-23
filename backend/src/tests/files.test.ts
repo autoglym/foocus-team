@@ -720,18 +720,18 @@ describe('File Uploads', () => {
   });
 
   describe('Internal storage path non-disclosure', () => {
-    it('should not expose gcsPath in upload response', async () => {
+    it('should not expose storagePath in upload response', async () => {
       const res = await request(app)
         .post('/files')
         .set('Authorization', `Bearer ${authToken}`)
         .attach('file', testFilePath);
 
       expect(res.status).toBe(201);
-      expect(res.body).not.toHaveProperty('gcsPath');
+      expect(res.body).not.toHaveProperty('storagePath');
       expect(res.body).toHaveProperty('url'); // public download URL is fine
     });
 
-    it('should not expose gcsPath in file info response', async () => {
+    it('should not expose storagePath in file info response', async () => {
       const uploadRes = await request(app)
         .post('/files')
         .set('Authorization', `Bearer ${authToken}`)
@@ -743,10 +743,10 @@ describe('File Uploads', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body).not.toHaveProperty('gcsPath');
+      expect(res.body).not.toHaveProperty('storagePath');
     });
 
-    it('should not expose gcsPath in file list response', async () => {
+    it('should not expose storagePath in file list response', async () => {
       await request(app)
         .post('/files')
         .set('Authorization', `Bearer ${authToken}`)
@@ -759,11 +759,11 @@ describe('File Uploads', () => {
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
       for (const file of res.body) {
-        expect(file).not.toHaveProperty('gcsPath');
+        expect(file).not.toHaveProperty('storagePath');
       }
     });
 
-    it('should not expose gcsPath in channel file list', async () => {
+    it('should not expose storagePath in channel file list', async () => {
       // Upload and attach a file to a channel message
       const uploadRes = await request(app)
         .post('/files')
@@ -783,7 +783,7 @@ describe('File Uploads', () => {
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
       for (const file of res.body) {
-        expect(file).not.toHaveProperty('gcsPath');
+        expect(file).not.toHaveProperty('storagePath');
       }
     });
   });

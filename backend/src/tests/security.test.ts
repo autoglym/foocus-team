@@ -1084,7 +1084,7 @@ describe('Security - Input Validation', () => {
   });
 
   describe('CSP media-src scoping', () => {
-    it('should NOT allow the entire storage.googleapis.com domain in media-src', async () => {
+    it('should NOT allow the entire supabase.co domain in media-src', async () => {
       // Any authenticated request will return the CSP header
       const res = await request(app)
         .get('/channels')
@@ -1093,35 +1093,35 @@ describe('Security - Input Validation', () => {
       const csp = res.headers['content-security-policy'];
       expect(csp).toBeDefined();
 
-      // media-src must NOT contain the bare domain (would allow any GCS bucket)
-      expect(csp).not.toMatch(/media-src[^;]*https:\/\/storage\.googleapis\.com[^/]/);
+      // media-src must NOT contain a bare Supabase origin (would allow any project/bucket)
+      expect(csp).not.toMatch(/media-src[^;]*https:\/\/[a-z0-9]+\.supabase\.co(\s|;|$)/);
 
-      // If GCS_BUCKET_NAME is set, media-src should scope to that bucket only
-      // If not set, media-src should only allow 'self' and blob:
-      if (process.env.GCS_BUCKET_NAME) {
-        expect(csp).toContain(`https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}`);
+      // If Supabase Storage is configured, media-src should scope to the signed-URL path
+      // of our bucket only. If not, media-src should only allow 'self' and blob:
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY) {
+        const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'files';
+        expect(csp).toContain(`${process.env.SUPABASE_URL}/storage/v1/object/sign/${bucket}/`);
       }
     });
 
-    it('should scope img-src and media-src consistently for GCS', async () => {
+    it('should scope img-src and media-src consistently for Supabase Storage', async () => {
       const res = await request(app)
         .get('/channels')
         .set('Authorization', `Bearer ${authToken}`);
 
       const csp = res.headers['content-security-policy'] as string;
 
-      // Extract the GCS origins from img-src and media-src
+      // Extract the Supabase origins from img-src and media-src
       const imgSrc = csp.match(/img-src\s+([^;]+)/)?.[1] || '';
       const mediaSrc = csp.match(/media-src\s+([^;]+)/)?.[1] || '';
 
-      const imgGcs = imgSrc.match(/https:\/\/storage\.googleapis\.com\S*/g) || [];
-      const mediaGcs = mediaSrc.match(/https:\/\/storage\.googleapis\.com\S*/g) || [];
+      const imgStorage = imgSrc.match(/https:\/\/\S+\.supabase\.co\S*/g) || [];
+      const mediaStorage = mediaSrc.match(/https:\/\/\S+\.supabase\.co\S*/g) || [];
 
-      // Both should either be empty (no GCS) or scoped to the same bucket
-      // Neither should contain the bare domain without a bucket path
-      for (const origin of [...imgGcs, ...mediaGcs]) {
-        // Each GCS origin must have a bucket path (not just the bare domain)
-        expect(origin).toMatch(/https:\/\/storage\.googleapis\.com\/.+/);
+      // Both should either be empty (no Supabase Storage) or scoped to the same bucket path
+      expect(imgStorage).toEqual(mediaStorage);
+      for (const origin of [...imgStorage, ...mediaStorage]) {
+        expect(origin).toMatch(/^https:\/\/\S+\.supabase\.co\/storage\/v1\/object\/sign\/.+\/$/);
       }
     });
   });

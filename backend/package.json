@@ -20,8 +20,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@google-cloud/storage": "^7.19.0",
     "@prisma/client": "^5.22.0",
+    "@supabase/storage-js": "^2.118.0",
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",

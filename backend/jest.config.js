@@ -14,6 +14,7 @@ export default {
     ],
   },
   testMatch: ['**/*.test.ts'],
+  setupFiles: ['<rootDir>/src/tests/env.ts'],
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
   testTimeout: 10000,
   maxWorkers: 1,
