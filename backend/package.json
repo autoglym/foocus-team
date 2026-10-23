@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "UV_THREADPOOL_SIZE=16 tsx watch src/index.ts",
-    "dev:seed": "tsx prisma/seed.ts && UV_THREADPOOL_SIZE=16 tsx watch src/index.ts",
+    "dev:seed": "tsx --env-file=.env prisma/seed.ts && UV_THREADPOOL_SIZE=16 tsx watch src/index.ts",
     "build": "tsc",
     "start": "UV_THREADPOOL_SIZE=16 node dist/index.js",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
@@ -14,7 +14,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx --env-file=.env prisma/seed.ts"
   },
   "keywords": [],
   "author": "",
