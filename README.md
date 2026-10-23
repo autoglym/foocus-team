@@ -42,3 +42,7 @@ Testene tømmer databasen, så de skal kjøre mot et eget schema. Lag `backend/.
 ```bash
 cd backend && npm test
 ```
+
+## Publisering
+
+Appen kan kjøre gratis på Render. Se [docs/DEPLOY.md](docs/DEPLOY.md).
