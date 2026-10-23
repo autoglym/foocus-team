@@ -19,7 +19,7 @@ Bygd på [Slawk](https://github.com/ncvgl/slawk) av Nathan Cavaglione (MIT-lisen
 Krever Node 22+.
 
 1. Kopier `backend/.env.example` til `backend/.env` og fyll inn:
-   - `DATABASE_URL` / `DIRECT_URL`: pooler-adressene fra Supabase (transaction-pooler 6543 for runtime, session-pooler 5432 for migreringer)
+   - `DATABASE_URL` / `DIRECT_URL`: session-pooler-adressen fra Supabase (port 5432, med `?schema=app`). Ikke bruk transaction-pooleren (6543): den mister `search_path`, og rå SQL-spørringer feiler.
    - `JWT_SECRET`: `openssl rand -hex 32`
    - `SUPABASE_URL` og `SUPABASE_SECRET_KEY` (Project Settings → API Keys). Uten nøkkel lagres filer på lokal disk i `backend/uploads/`.
    - `SEED_PASSWORD` og `DEMO_PASSWORD` for testbrukerne
