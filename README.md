@@ -1,4 +1,4 @@
-# Teamverktøy
+# Foocus Team
 
 Internt teamverktøy: Slack-aktig chat, dokumenter og en AI-agent (Claude) som kan oppsummere og svare med kilder fra samtaler og dokumenter.
 

@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils';
 
-export const APP_NAME = 'Teamverktøy';
+export const APP_NAME = 'Foocus Team';
+/** Product tag shown after "FOOCUS" in the wordmark, as in "FOOCUS Intelligence". */
+const PRODUCT_TAG = 'Team';
 
 /** The Foocus owl pictogram — two eyes ("OO") under a brow, in a cerulean disc. */
 export function FoocusMark({ className }: { className?: string }) {
@@ -19,7 +21,7 @@ export function FoocusMark({ className }: { className?: string }) {
   );
 }
 
-/** Foocus owl + "FOOCUS" + product name, as in the Foocus wordmark. */
+/** Foocus owl + "FOOCUS" + product tag, as in the Foocus wordmark. */
 export function Wordmark({ className, inverted = false }: { className?: string; inverted?: boolean }) {
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
@@ -33,7 +35,7 @@ export function Wordmark({ className, inverted = false }: { className?: string; 
         Foocus
       </span>
       <span className={cn('text-[15px] font-light tracking-tight', inverted ? 'text-white/60' : 'text-slack-hint')}>
-        {APP_NAME}
+        {PRODUCT_TAG}
       </span>
     </span>
   );

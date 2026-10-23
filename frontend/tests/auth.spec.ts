@@ -53,8 +53,8 @@ test.describe('Authentication', () => {
     const email = uniqueEmail();
     await register(page, 'Login Tester', email, TEST_PASSWORD);
 
-    // The Teamverktøy workspace header should be visible
-    await expect(page.getByTestId('sidebar').getByText('Teamverktøy')).toBeVisible();
+    // The Foocus Team workspace header should be visible
+    await expect(page.getByTestId('sidebar').getByText('Foocus Team')).toBeVisible();
 
     // Sidebar channel list should be visible
     await expect(page.getByTestId('sidebar')).toBeVisible();
