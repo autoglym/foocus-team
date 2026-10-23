@@ -1,68 +1,44 @@
-<p align="center">
-  <img src="images/slawk.png" alt="Slawk" width="400">
-</p>
+# Teamverktøy
 
-<p align="center">
-  An open-source Slack clone built in 14 days with Claude Code.<br>
-  Slack charges $8/user/month. A 50-person org pays $5,000/year.<br>
-  This is the experiment: can any startup self-build and host an alternative for $100/year total?
-</p>
+Internt teamverktøy: Slack-aktig chat, dokumenter og en AI-agent (Claude) som kan oppsummere og svare med kilder fra samtaler og dokumenter.
 
-<p align="center">
-  <b>Stack:</b> Node.js · PostgreSQL · Prisma · Socket.io · React · Vite · Tailwind<br>
-  <b>Features:</b> Channels · Threads · Voice calls · File uploads · Search · Admin panel · Mobile responsive<br>
-  <b>Vision:</b> minimalist · familiar · fast · safe · open-source
-</p>
+Bygd på [Slawk](https://github.com/ncvgl/slawk) av Nathan Cavaglione (MIT-lisens, se [LICENSE](LICENSE)). Planen videre står i [MVP-PLAN.md](MVP-PLAN.md).
 
-## [Day 14](https://www.linkedin.com/posts/nathancavaglione_day-1414-slack-took-7-years-and-340m-to-activity-7437875121870163969-Hxur?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
+## Arkitektur
 
-<img src="images/day_14.gif" alt="Day 14" width="800">
+| Del | Teknologi |
+|---|---|
+| Backend | Node.js, Express, Prisma, Socket.io (`backend/`) |
+| Frontend | React, Vite, Tailwind (`frontend/`) |
+| Database | Supabase Postgres, schema `app` (ikke eksponert via Supabase-REST) |
+| Filer | Supabase Storage, privat bucket `files`, signerte URL-er |
+| Innlogging og tilgang | Slawks egen JWT-auth og kanaltilgang (`backend/src/middleware/authorize.ts`) |
 
-## [Day 13](https://www.linkedin.com/posts/nathancavaglione_day-1314-cloning-slack-with-claude-code-activity-7437474978582716417-23R_?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
+## Kom i gang lokalt
 
-<img src="images/day_13.png" alt="Day 13" width="800">
+Krever Node 22+.
 
-## [Day 12](https://www.linkedin.com/posts/nathancavaglione_day-1214-cloning-slack-with-claude-code-activity-7437209559691259905-qKE-?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
+1. Kopier `backend/.env.example` til `backend/.env` og fyll inn:
+   - `DATABASE_URL` / `DIRECT_URL`: pooler-adressene fra Supabase (transaction-pooler 6543 for runtime, session-pooler 5432 for migreringer)
+   - `JWT_SECRET`: `openssl rand -hex 32`
+   - `SUPABASE_URL` og `SUPABASE_SECRET_KEY` (Project Settings → API Keys). Uten nøkkel lagres filer på lokal disk i `backend/uploads/`.
+   - `SEED_PASSWORD` og `DEMO_PASSWORD` for testbrukerne
+2. Installer og sett opp databasen:
 
-<img src="images/day_12.gif" alt="Day 12" width="240">
+   ```bash
+   cd backend && npm install && npx prisma migrate deploy && npm run db:seed
+   ```
 
-## [Day 11](https://www.linkedin.com/posts/nathancavaglione_day-1114-cloning-slack-with-claude-code-activity-7436864574370369536-ph9P?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
+   ```bash
+   cd frontend && npm install
+   ```
 
-<img src="images/day_11.png" alt="Day 11" width="800">
+3. Start backend (`npm run dev` i `backend/`, port 3000) og frontend (`npm run dev` i `frontend/`, port 5173). Logg inn som f.eks. `alice@slawk.dev` med `SEED_PASSWORD`.
 
-## [Day 10](https://www.linkedin.com/posts/nathancavaglione_day-1014-cloning-slack-with-claude-code-activity-7436479309319475200-W8uQ?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
+## Tester
 
-<img src="images/day_10.png" alt="Day 10" width="400">
+Testene tømmer databasen, så de skal kjøre mot et eget schema. Lag `backend/.env.test` med `DATABASE_URL` og `DIRECT_URL` som peker på `?schema=app_test`, kjør `npx prisma migrate deploy` med de verdiene, og deretter:
 
-## [Day 8+9](https://www.linkedin.com/posts/nathancavaglione_day-914-cloning-slack-with-claude-code-activity-7436051734357221376-p5Qu?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-<img src="images/day_8_and_9.png" alt="Day 8+9" width="800">
-
-## [Day 7](https://www.linkedin.com/posts/nathancavaglione_day-714-cloning-slack-with-claude-code-ugcPost-7435417548227100674-VZR3?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-<img src="images/day_7.png" alt="Day 7" width="800">
-
-## [Day 6](https://www.linkedin.com/posts/nathancavaglione_day-614-cloning-slack-with-claude-code-activity-7435032144223281153-t1T0?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-![Day 6](images/day6-demo.gif)
-
-## [Day 5](https://www.linkedin.com/posts/nathancavaglione_day-514-cloning-slack-with-claude-code-share-7434705951200272385-wOGI?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-<img src="images/day_5.jpeg" alt="Day 5" width="800">
-
-## [Day 4](https://www.linkedin.com/posts/nathancavaglione_day-414-cloning-slack-with-claude-code-activity-7434330782736928768-1L7h?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-<img src="images/day_4.jpeg" alt="Day 4" width="400">
-
-## [Day 3](https://www.linkedin.com/posts/nathancavaglione_day-314-cloning-slack-with-claude-code-share-7433958640103026689-hdKo?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-![Day 3](images/day_3.gif)
-
-## [Day 2](https://www.linkedin.com/posts/nathancavaglione_day-214-cloning-slack-with-claude-code-activity-7433486444993613824-umUt?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-![Day 2](images/day_2.jpeg)
-
-
-## [Day 1](https://www.linkedin.com/posts/nathancavaglione_slack-charges-8usermonth-for-a-50-person-activity-7433209073036210176-JcWL?utm_source=share&utm_medium=member_desktop&rcm=ACoAABo_DiMBthZ8gqvy6PiOdSHUMuPt9XgMnfY)
-
-![Day 1](images/day_1.jpeg)
+```bash
+cd backend && npm test
+```

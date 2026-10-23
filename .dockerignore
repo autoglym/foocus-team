@@ -6,8 +6,6 @@ node_modules
 .gitignore
 *.md
 screenshots
-images
-my_prompts
 backend/uploads
 backend/test-results
 frontend/test-results
