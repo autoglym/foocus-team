@@ -13,3 +13,4 @@ frontend/test-results
 **/*.spec.*
 **/playwright.config.*
 **/.playwright
+**/.env.*

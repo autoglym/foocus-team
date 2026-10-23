@@ -1,0 +1,31 @@
+# Render Blueprint for Foocus Team: one web service (Docker) on the free plan.
+# Render → New → Blueprint → pick this repo. Values marked sync: false are
+# asked for in the dashboard; take them from backend/.env.production.
+services:
+  - type: web
+    name: foocus-team
+    runtime: docker
+    plan: free
+    # Closest Render region to the Supabase database (eu-north-1, Stockholm)
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SUPABASE_STORAGE_BUCKET
+        value: files
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

@@ -12,3 +12,4 @@ stop_hook_template/
 .env.*
 !.env.example
 backend/uploads/
+backend/public/
