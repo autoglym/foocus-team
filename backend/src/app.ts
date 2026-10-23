@@ -43,7 +43,7 @@ app.use(helmet({
       'media-src': ["'self'", 'blob:', ...(signedUrlSource ? [signedUrlSource] : [])],
     },
   },
-  crossOriginEmbedderPolicy: 'credentialless' as any,
+  crossOriginEmbedderPolicy: { policy: 'credentialless' },
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
 }));
 const corsOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173');
