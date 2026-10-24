@@ -218,9 +218,9 @@ export const MessageInput = React.memo(function MessageInput({ placeholder, onSe
               onClick={handleSend}
               disabled={!hasContent}
               className={cn(
-                'flex h-7 items-center justify-center rounded-l px-2 transition-colors',
+                'flex h-8 items-center justify-center rounded-l-full pl-3 pr-2 transition-all',
                 hasContent
-                  ? 'bg-slack-btn text-white hover:bg-slack-btn-hover'
+                  ? 'bg-slack-btn text-white hover:bg-slack-btn-hover shadow-[3px_3px_8px_var(--neu-dark),-3px_-3px_8px_var(--neu-light)]'
                   : 'text-slack-disabled',
               )}
             >
@@ -231,7 +231,7 @@ export const MessageInput = React.memo(function MessageInput({ placeholder, onSe
               onClick={() => hasContent && setShowScheduleMenu((v) => !v)}
               disabled={!hasContent}
               className={cn(
-                'flex h-7 w-5 items-center justify-center rounded-r border-l transition-colors',
+                'flex h-8 w-6 items-center justify-center rounded-r-full border-l transition-all',
                 hasContent
                   ? 'bg-slack-btn text-white hover:bg-slack-btn-hover border-slack-btn-hover'
                   : 'text-slack-disabled border-slack-border',

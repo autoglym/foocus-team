@@ -31,8 +31,8 @@
 
   /* Surface / Background — Foocus parchment. The content area sits on one
      soft "fog" tone so neumorphic (extruded / pressed) elements read. */
-  --color-slack-surface: #F4F3EF;
-  --color-slack-hover: #FFFFFF;
+  --color-slack-surface: #ECEAE4;
+  --color-slack-hover: #F3F1EC;
   --color-slack-active-tab: #E2E0D9;
   --color-slack-pinned: #FCF6E5;
   --color-slack-success: #DBECE4;
@@ -84,27 +84,40 @@
 }
 
 /* ──────────────────────────────────────────────────────────
-   Depth — calm, Apple-like elevation with a light neumorphic touch:
-   raised elements are white with a diffuse shadow and a hairline top
-   highlight; wells (text fields) are softly pressed into the surface.
+   Neumorphism ("soft UI"). Everything sits on ONE surface colour and
+   is extruded from it (raised) or pressed into it (inset). Light comes
+   from the top left: white highlight up-left, warm shadow down-right
+   (Foocus muted). Raised elements use the surface colour, never white.
+   The navy variants do the same on the dark sidebar.
    ────────────────────────────────────────────────────────── */
 :root {
-  --shadow-float: 0 1px 2px rgba(15, 17, 24, 0.05), 0 12px 32px -8px rgba(15, 17, 24, 0.12);
-  --shadow-float-sm: 0 1px 2px rgba(15, 17, 24, 0.06), 0 4px 12px -4px rgba(15, 17, 24, 0.10);
-  --shadow-well: inset 0 1px 3px rgba(15, 17, 24, 0.07), inset 0 0 0 1px rgba(15, 17, 24, 0.04);
+  --neu-light: rgba(255, 255, 255, 0.95);
+  --neu-dark: rgba(166, 158, 140, 0.55);
+  --neu-navy-light: rgba(46, 52, 68, 0.9);
+  --neu-navy-dark: rgba(0, 0, 0, 0.6);
 }
 
 @utility neu-raised {
-  background-color: #FFFFFF;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--shadow-float);
+  background-color: var(--color-slack-surface);
+  box-shadow: 9px 9px 18px var(--neu-dark), -9px -9px 18px var(--neu-light);
 }
 @utility neu-raised-sm {
-  background-color: #FFFFFF;
-  box-shadow: var(--shadow-float-sm);
+  background-color: var(--color-slack-surface);
+  box-shadow: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
 }
 @utility neu-inset {
   background-color: var(--color-slack-surface);
-  box-shadow: var(--shadow-well);
+  box-shadow: inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
+}
+@utility neu-inset-sm {
+  background-color: var(--color-slack-surface);
+  box-shadow: inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light);
+}
+@utility neu-navy-raised {
+  box-shadow: 4px 4px 9px var(--neu-navy-dark), -3px -3px 8px var(--neu-navy-light);
+}
+@utility neu-navy-inset {
+  box-shadow: inset 3px 3px 7px var(--neu-navy-dark), inset -3px -3px 7px var(--neu-navy-light);
 }
 
 /* Non-color design tokens */
@@ -186,7 +199,7 @@ body {
   margin: 2px 6px 6px;
   border-radius: 14px;
   background-color: var(--color-slack-surface);
-  box-shadow: var(--shadow-well);
+  box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
 }
 
 .slawk-editor .ql-editor {

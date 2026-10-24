@@ -180,7 +180,7 @@ export function MessageList({ channelId, onOpenThread, readOnly }: MessageListPr
             {showDateSeparator && (
               <div className="relative my-[10px] flex items-center">
                 <div className="flex-1 border-t border-slack-border-light" />
-                <button className="flex-shrink-0 rounded-full border border-slack-border-light bg-white px-3 py-[2px] text-[13px] font-semibold text-slack-primary hover:bg-slack-hover transition-colors">
+                <button className="flex-shrink-0 rounded-full neu-raised-sm px-3 py-[3px] text-[12px] font-semibold text-slack-secondary transition-colors">
                   {formatDateSeparator(message.createdAt)}
                 </button>
                 <div className="flex-1 border-t border-slack-border-light" />

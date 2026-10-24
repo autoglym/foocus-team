@@ -195,9 +195,9 @@ export function Sidebar() {
               }
             }}
             className={cn(
-              'relative flex flex-col h-[68px] w-[52px] items-center justify-center gap-1 rounded-lg transition-colors',
+              'relative flex flex-col h-[64px] w-[54px] items-center justify-center gap-1 rounded-2xl transition-all',
               activeNav === item.id
-                ? 'bg-slack-sidebar-hover/50 text-white'
+                ? 'neu-navy-raised bg-slack-sidebar text-white'
                 : 'text-white/70 hover:bg-white/10 hover:text-white'
             )}
           >
@@ -224,9 +224,9 @@ export function Sidebar() {
               }
             }}
             className={cn(
-              'relative flex flex-col h-[68px] w-[52px] items-center justify-center gap-1 rounded-lg transition-colors',
+              'relative flex flex-col h-[64px] w-[54px] items-center justify-center gap-1 rounded-2xl transition-all',
               activeNav === 'admin'
-                ? 'bg-slack-sidebar-hover/50 text-white'
+                ? 'neu-navy-raised bg-slack-sidebar text-white'
                 : 'text-white/70 hover:bg-white/10 hover:text-white'
             )}
           >
@@ -290,7 +290,7 @@ export function Sidebar() {
         {/* Workspace Header - 44px height, 6px 16px padding */}
         <div className="flex h-[44px] items-center justify-between border-b border-white/10 px-4 py-[6px] mt-[env(safe-area-inset-top)]">
           <Wordmark inverted />
-          <button onClick={handleOpenAddTeammates} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
+          <button onClick={handleOpenAddTeammates} className="flex h-8 w-8 items-center justify-center rounded-full bg-slack-sidebar neu-navy-raised text-white/90 hover:text-white active:neu-navy-inset">
             <SquarePen className="h-4 w-4" />
           </button>
         </div>
