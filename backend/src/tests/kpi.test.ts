@@ -32,6 +32,7 @@ describe('KPI dashboard', () => {
     const res = await request(app).get('/kpi/dashboard').set('Authorization', `Bearer ${admin}`);
     expect(res.status).toBe(200);
     expect(res.body.crm).toEqual({ configured: false, ok: false });
+    expect(res.body.ga4).toEqual({ configured: false, ok: false });
   });
 
   it('tracks manual metrics with history and the previous value', async () => {

@@ -11,6 +11,7 @@ import {
   isCrmConfigured, fetchCrmSummary, fetchPipelineByStage,
   type CrmSummary, type StageRow,
 } from '../services/crmKpi.js';
+import { isGa4Configured, fetchGa4, type Ga4Result } from '../services/ga4.js';
 
 // Commercial dashboard — owners and admins only.
 const router = Router();
@@ -109,7 +110,21 @@ router.get('/dashboard', async (_req: AuthRequest, res: Response) => {
       };
     });
 
-    res.json({ crm, metrics: result });
+    let ga4: { configured: boolean; ok: boolean; error?: string } & Partial<Ga4Result> = {
+      configured: isGa4Configured,
+      ok: false,
+    };
+    if (isGa4Configured) {
+      try {
+        const loaded = await fetchGa4();
+        ga4 = { configured: true, ok: true, ...loaded };
+      } catch (err) {
+        logError('GA4 fetch failed', err);
+        ga4 = { configured: true, ok: false, error: 'Could not reach Google Analytics.' };
+      }
+    }
+
+    res.json({ crm, ga4, metrics: result });
   } catch (error) {
     logError('KPI dashboard error', error);
     res.status(500).json({ error: 'Failed to load the dashboard' });

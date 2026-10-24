@@ -13,3 +13,5 @@ stop_hook_template/
 !.env.example
 backend/uploads/
 backend/public/
+# Google service account key (dashboard: Google Analytics)
+backend/ga4-service-account.json

@@ -13,7 +13,9 @@ interface Metric {
   key: string;
   label: string;
   unit: Unit;
-  source: 'crm' | 'manual';
+  source: 'crm' | 'manual' | 'ga4';
+  /** Overrides "vs <date>" in the change line, e.g. "vs previous 30 days" */
+  compareLabel?: string;
   current: number | null;
   updatedAt: string | null;
   previous: { value: number; capturedAt: string } | null;
@@ -21,8 +23,15 @@ interface Metric {
   history: Point[];
 }
 interface StageRow { stage: string; deals: number; total: number; weighted: number }
+interface Ga4Metric { key: string; label: string; current: number; previous: number; history: Array<{ date: string; value: number }> }
 interface Dashboard {
   crm: { configured: boolean; ok: boolean; error?: string; fetchedAt?: string; pipelineByStage?: StageRow[] };
+  ga4: {
+    configured: boolean; ok: boolean; error?: string; fetchedAt?: string; metrics?: Ga4Metric[];
+    channels?: Array<{ name: string; sessions: number }>;
+    sources?: Array<{ name: string; sessions: number }>;
+    topPages?: Array<{ path: string; title: string; views: number; users: number }>;
+  };
   metrics: Metric[];
 }
 
@@ -94,6 +103,26 @@ export function DashboardPage() {
               <PipelineByStage rows={data.crm.pipelineByStage} />
             )}
 
+            {data.ga4.configured && (
+              <section aria-labelledby="web-heading" className="mt-8">
+                <h2 id="web-heading" className="mb-3 text-[13px] font-medium text-slack-secondary">
+                  Website · Google Analytics, last 30 days
+                </h2>
+                {data.ga4.error && <p className="mb-3 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">{data.ga4.error}</p>}
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
+                  {data.ga4.metrics?.map((g, i) => (
+                    <MetricTile key={g.key} metric={ga4ToMetric(g, i)} onChanged={load} />
+                  ))}
+                </div>
+                {data.ga4.ok && (
+                  <div className="mt-5 grid gap-5 lg:grid-cols-2">
+                    <TrafficSources channels={data.ga4.channels ?? []} sources={data.ga4.sources ?? []} />
+                    <TopPages pages={data.ga4.topPages ?? []} />
+                  </div>
+                )}
+              </section>
+            )}
+
             <section aria-labelledby="manual-heading" className="mt-8">
               <div className="mb-3 flex items-center gap-3">
                 <h2 id="manual-heading" className="text-[13px] font-medium text-slack-secondary">Updated by hand</h2>
@@ -120,6 +149,23 @@ export function DashboardPage() {
   );
 }
 
+function ga4ToMetric(g: Ga4Metric, i: number): Metric {
+  const last = g.history[g.history.length - 1]?.date ?? null;
+  return {
+    id: -(i + 1),
+    key: g.key,
+    label: g.label,
+    unit: 'count',
+    source: 'ga4',
+    current: g.current,
+    updatedAt: last,
+    previous: { value: g.previous, capturedAt: last ?? new Date().toISOString() },
+    compareLabel: 'vs previous 30 days',
+    trackingSince: g.history[0]?.date ?? null,
+    history: g.history.map((h, j) => ({ id: j, value: h.value, capturedAt: h.date })),
+  };
+}
+
 function Delta({ metric }: { metric: Metric }) {
   if (metric.current === null) return null;
   if (!metric.previous) {
@@ -140,7 +186,7 @@ function Delta({ metric }: { metric: Metric }) {
       <span className={cn('font-medium', tone)}>
         {sign}{formatValue(Math.abs(diff), metric.unit)}{pct !== null && ` (${sign}${num.format(Math.abs(pct))} %)`}
       </span>
-      <span className="text-slack-hint">vs {format(new Date(metric.previous.capturedAt), 'd MMM')}</span>
+      <span className="text-slack-hint">{metric.compareLabel ?? `vs ${format(new Date(metric.previous.capturedAt), 'd MMM')}`}</span>
     </p>
   );
 }
@@ -391,6 +437,89 @@ function PipelineByStage({ rows }: { rows: StageRow[] }) {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function TrafficSources({ channels, sources }: { channels: Array<{ name: string; sessions: number }>; sources: Array<{ name: string; sessions: number }> }) {
+  const [hover, setHover] = useState<string | null>(null);
+  const total = channels.reduce((sum, c) => sum + c.sessions, 0) || 1;
+  const max = Math.max(...channels.map((c) => c.sessions), 1);
+  return (
+    <section aria-labelledby="sources-heading" className="rounded-[24px] neu-raised px-6 py-5">
+      <h3 id="sources-heading" className="font-heading text-[16px] font-bold text-slack-primary">Traffic sources</h3>
+      <p className="mb-4 text-[12px] text-slack-hint">Sessions by channel</p>
+      {channels.length === 0 ? (
+        <p className="text-[13px] text-slack-hint">No traffic in this period.</p>
+      ) : (
+        <ul className="space-y-3">
+          {channels.map((c) => (
+            <li key={c.name} className="grid grid-cols-[120px_1fr_auto] items-center gap-3"
+              onMouseEnter={() => setHover(c.name)} onMouseLeave={() => setHover(null)}>
+              <span className="truncate text-[13px] font-medium text-slack-primary" title={c.name}>{c.name}</span>
+              <span className="relative h-[12px] rounded-full neu-inset-sm" aria-hidden>
+                <span className="absolute inset-y-[2px] left-[2px] rounded-full bg-[var(--color-chart-1)]"
+                  style={{ width: `max(calc(${(c.sessions / max) * 100}% - 4px), 6px)` }} />
+                {hover === c.name && (
+                  <span className="absolute -top-9 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slack-primary px-2 py-1 text-[11px] text-white">
+                    {c.name}: {num.format(c.sessions)} sessions ({num.format((c.sessions / total) * 100)} %)
+                  </span>
+                )}
+              </span>
+              <span className="text-right text-[13px] tabular-nums text-slack-primary">
+                {num.format(c.sessions)}<span className="ml-1.5 text-[12px] text-slack-hint">{num.format((c.sessions / total) * 100)} %</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {sources.length > 0 && (
+        <>
+          <h4 className="mb-2 mt-5 text-[12px] font-medium text-slack-secondary">Top sources</h4>
+          <ol className="space-y-1">
+            {sources.map((src) => (
+              <li key={src.name} className="flex justify-between gap-3 text-[13px]">
+                <span className="truncate text-slack-primary">{src.name}</span>
+                <span className="tabular-nums text-slack-secondary">{num.format(src.sessions)}</span>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+    </section>
+  );
+}
+
+function TopPages({ pages }: { pages: Array<{ path: string; title: string; views: number; users: number }> }) {
+  return (
+    <section aria-labelledby="pages-heading" className="rounded-[24px] neu-raised px-6 py-5">
+      <h3 id="pages-heading" className="font-heading text-[16px] font-bold text-slack-primary">Most visited pages</h3>
+      <p className="mb-3 text-[12px] text-slack-hint">Page views and users, last 30 days</p>
+      {pages.length === 0 ? (
+        <p className="text-[13px] text-slack-hint">No page views in this period.</p>
+      ) : (
+        <table className="w-full table-fixed text-[13px]">
+          <thead>
+            <tr className="text-left text-[12px] text-slack-hint">
+              <th className="pb-2 font-medium">Page</th>
+              <th className="w-[70px] pb-2 text-right font-medium">Views</th>
+              <th className="w-[60px] pb-2 text-right font-medium">Users</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pages.map((p) => (
+              <tr key={p.path} className="border-t border-slack-border/60">
+                <td className="py-1.5 pr-3">
+                  <span className="block truncate text-slack-primary" title={p.title}>{p.title || p.path}</span>
+                  <span className="block truncate text-[11px] text-slack-hint">{p.path}</span>
+                </td>
+                <td className="py-1.5 text-right tabular-nums text-slack-primary">{num.format(p.views)}</td>
+                <td className="py-1.5 text-right tabular-nums text-slack-secondary">{num.format(p.users)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }
