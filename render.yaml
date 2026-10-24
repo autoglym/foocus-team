@@ -37,3 +37,5 @@ services:
         sync: false
       - key: GOOGLE_ALLOWED_DOMAINS
         value: foocus.ai
+      - key: RONJA_KPI_DATABASE_URL
+        sync: false

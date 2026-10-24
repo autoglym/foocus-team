@@ -27,6 +27,7 @@ import pushRoutes from './routes/push.js';
 import unfurlRoutes from './routes/unfurl.js';
 import googleAuthRoutes from './routes/googleAuth.js';
 import documentRoutes from './routes/documents.js';
+import kpiRoutes from './routes/kpi.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authMiddleware } from './middleware/auth.js';
 import { JWT_SECRET } from './config.js';
@@ -101,7 +102,7 @@ app.use((req, res, next) => {
       req.path.startsWith('/files') || req.path.startsWith('/users') || req.path.startsWith('/dms') ||
       req.path.startsWith('/search') || req.path.startsWith('/bookmarks') || req.path.startsWith('/admin') ||
       req.path.startsWith('/push') || req.path.startsWith('/documents') || req.path.startsWith('/folders') ||
-      req.path.startsWith('/library')) {
+      req.path.startsWith('/library') || req.path.startsWith('/kpi')) {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();
@@ -149,6 +150,7 @@ app.use('/messages', apiLimiter, scheduledMessageRoutes);
 app.use('/admin', apiLimiter, adminRoutes);
 app.use('/push', apiLimiter, pushRoutes);
 app.use('/unfurl', apiLimiter, unfurlRoutes);
+app.use('/kpi', apiLimiter, kpiRoutes);
 // Folders, documents and library files (/channels/:id/library, /documents, /folders, /library)
 app.use(['/documents', '/folders', '/library'], apiLimiter);
 app.use(documentRoutes);

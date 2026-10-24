@@ -15,6 +15,8 @@ beforeAll(async () => {
   await prisma.bookmark.deleteMany();
   await prisma.scheduledMessage.deleteMany();
   await prisma.reaction.deleteMany();
+  await prisma.kpiValue.deleteMany();
+  await prisma.kpiMetric.deleteMany();
   await prisma.documentVersion.deleteMany();
   await prisma.document.deleteMany();
   await prisma.file.deleteMany();

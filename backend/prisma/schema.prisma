@@ -362,3 +362,29 @@ model Webhook {
   @@index([channelId])
   @@index([token])
 }
+
+// Dashboard (owners/admins). CRM metrics are snapshots of the Ronja CRM totals;
+// manual metrics are entered by admins. Values form a time series per metric.
+model KpiMetric {
+  id        Int        @id @default(autoincrement())
+  key       String     @unique @db.VarChar(80)
+  label     String     @db.VarChar(80)
+  // NOK | count | percent
+  unit      String     @default("count") @db.VarChar(20)
+  // crm | manual
+  source    String     @default("manual") @db.VarChar(20)
+  sortOrder Int        @default(100)
+  createdAt DateTime   @default(now())
+  values    KpiValue[]
+}
+
+model KpiValue {
+  id         Int       @id @default(autoincrement())
+  metricId   Int
+  value      Float
+  capturedAt DateTime  @default(now())
+  createdBy  Int?
+  metric     KpiMetric @relation(fields: [metricId], references: [id], onDelete: Cascade)
+
+  @@index([metricId, capturedAt])
+}
