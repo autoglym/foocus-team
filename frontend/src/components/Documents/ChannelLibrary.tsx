@@ -126,9 +126,46 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
           {!showTrash && library?.breadcrumb.map((f, i) => (
             <span key={f.id} className="flex min-w-0 items-center gap-1">
               <ChevronRight className="h-4 w-4 flex-shrink-0 text-slack-hint" />
-              <button onClick={() => openFolder(f.id)} className={cn('truncate rounded-lg px-2 py-1 font-heading font-bold tracking-tight hover:bg-slack-hover', i === library.breadcrumb.length - 1 ? 'text-slack-primary' : 'text-slack-secondary')}>
-                {f.name}
-              </button>
+              {i === library.breadcrumb.length - 1 && !readOnly ? (
+                // Current folder: click the name to rename it
+                renaming?.id === f.id ? (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const name = renaming.name.trim();
+                      if (!name || name === f.name) return setRenaming(null);
+                      void run(() => updateFolder(f.id, { name })).then(() => setRenaming(null));
+                    }}
+                  >
+                    <input
+                      autoFocus
+                      data-testid="folder-title-input"
+                      value={renaming.name}
+                      onChange={(e) => setRenaming({ id: f.id, name: e.target.value.slice(0, 120) })}
+                      onKeyDown={(e) => e.key === 'Escape' && setRenaming(null)}
+                      onBlur={(e) => e.currentTarget.form?.requestSubmit()}
+                      onFocus={(e) => e.currentTarget.select()}
+                      aria-label="Folder name"
+                      size={Math.max(renaming.name.length, 6)}
+                      className="rounded-lg neu-inset-sm px-2 py-1 font-heading text-[15px] font-bold tracking-tight text-slack-primary outline-none"
+                    />
+                  </form>
+                ) : (
+                  <button
+                    data-testid="folder-title"
+                    onClick={() => setRenaming({ id: f.id, name: f.name })}
+                    title="Click to rename"
+                    className="group flex min-w-0 items-center gap-1.5 rounded-lg px-2 py-1 font-heading font-bold tracking-tight text-slack-primary hover:bg-slack-hover"
+                  >
+                    <span className="truncate">{f.name}</span>
+                    <Pencil className="h-3.5 w-3.5 flex-shrink-0 text-slack-hint opacity-0 transition-opacity group-hover:opacity-100" />
+                  </button>
+                )
+              ) : (
+                <button onClick={() => openFolder(f.id)} className={cn('truncate rounded-lg px-2 py-1 font-heading font-bold tracking-tight hover:bg-slack-hover', i === library.breadcrumb.length - 1 ? 'text-slack-primary' : 'text-slack-secondary')}>
+                  {f.name}
+                </button>
+              )}
             </span>
           ))}
         </nav>
