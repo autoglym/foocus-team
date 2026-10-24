@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -37,20 +37,24 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
 
-  messages           Message[]
-  channels           ChannelMember[]
-  reactions          Reaction[]
-  dmReactions        DMReaction[]
-  files              File[]
-  sentDMs            DirectMessage[] @relation("SentMessages")
-  receivedDMs        DirectMessage[] @relation("ReceivedMessages")
-  channelReads       ChannelRead[]
-  bookmarks          Bookmark[]
-  scheduledMessages  ScheduledMessage[]
-  inviteLinks        InviteLink[]
-  auditLogs          AuditLog[]
-  pushSubscriptions  PushSubscription[]
-  webhooks           Webhook[]
+  messages          Message[]
+  channels          ChannelMember[]
+  reactions         Reaction[]
+  dmReactions       DMReaction[]
+  files             File[]
+  sentDMs           DirectMessage[]    @relation("SentMessages")
+  receivedDMs       DirectMessage[]    @relation("ReceivedMessages")
+  channelReads      ChannelRead[]
+  bookmarks         Bookmark[]
+  scheduledMessages ScheduledMessage[]
+  inviteLinks       InviteLink[]
+  auditLogs         AuditLog[]
+  pushSubscriptions PushSubscription[]
+  webhooks          Webhook[]
+  foldersCreated    Folder[]           @relation("FoldersCreated")
+  documentsCreated  Document[]         @relation("DocumentsCreated")
+  documentsUpdated  Document[]         @relation("DocumentsUpdated")
+  documentVersions  DocumentVersion[]  @relation("DocumentVersions")
 }
 
 model InviteLink {
@@ -73,15 +77,18 @@ model Channel {
   isPrivate   Boolean   @default(false)
   // Group DM: a hidden private channel shown under Direct messages
   isGroupDM   Boolean   @default(false)
-  createdBy  Int?
-  archivedAt DateTime?
-  createdAt  DateTime  @default(now())
+  createdBy   Int?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
-  messages           Message[]
-  members            ChannelMember[]
-  reads              ChannelRead[]
-  scheduledMessages  ScheduledMessage[]
-  webhooks           Webhook[]
+  messages          Message[]
+  members           ChannelMember[]
+  reads             ChannelRead[]
+  scheduledMessages ScheduledMessage[]
+  webhooks          Webhook[]
+  folders           Folder[]
+  documents         Document[]
+  libraryFiles      File[]             @relation("LibraryFiles")
 }
 
 model AuditLog {
@@ -106,8 +113,8 @@ model ChannelMember {
   role      ChannelRole @default(MEMBER)
   joinedAt  DateTime    @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
-  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   @@id([userId, channelId])
 }
@@ -146,8 +153,8 @@ model Reaction {
   messageId Int
   createdAt DateTime @default(now())
 
-  user      User    @relation(fields: [userId], references: [id])
-  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, messageId, emoji])
   @@index([messageId])
@@ -164,15 +171,81 @@ model File {
   userId       Int
   messageId    Int?
   dmId         Int?
+  // Files uploaded straight into a channel's library (Docs tab), optionally in a folder
+  channelId    Int?
+  folderId     Int?
   createdAt    DateTime @default(now())
 
-  user      User            @relation(fields: [userId], references: [id])
-  message   Message?        @relation(fields: [messageId], references: [id], onDelete: SetNull)
-  dm        DirectMessage?  @relation(fields: [dmId], references: [id], onDelete: SetNull)
+  user    User           @relation(fields: [userId], references: [id])
+  message Message?       @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  dm      DirectMessage? @relation(fields: [dmId], references: [id], onDelete: SetNull)
+  channel Channel?       @relation("LibraryFiles", fields: [channelId], references: [id], onDelete: Cascade)
+  folder  Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([messageId])
   @@index([dmId])
+  @@index([channelId, folderId])
+}
+
+// Documents belong to a channel and inherit its access (channel membership).
+model Folder {
+  id        Int      @id @default(autoincrement())
+  channelId Int
+  parentId  Int?
+  name      String   @db.VarChar(120)
+  createdBy Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channel   Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  parent    Folder?    @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[]   @relation("FolderTree")
+  creator   User       @relation("FoldersCreated", fields: [createdBy], references: [id])
+  documents Document[]
+  files     File[]
+
+  @@index([channelId, parentId])
+}
+
+model Document {
+  id          Int       @id @default(autoincrement())
+  channelId   Int
+  folderId    Int?
+  title       String    @db.VarChar(200)
+  // BlockNote blocks (JSON); contentText is the plain text for search and the AI agent
+  content     Json
+  contentText String    @default("")
+  createdBy   Int
+  updatedBy   Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  // Trash: soft-deleted documents can be restored
+  deletedAt   DateTime?
+
+  channel  Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  folder   Folder?           @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  creator  User              @relation("DocumentsCreated", fields: [createdBy], references: [id])
+  updater  User              @relation("DocumentsUpdated", fields: [updatedBy], references: [id])
+  versions DocumentVersion[]
+
+  @@index([channelId, folderId])
+  @@index([deletedAt])
+}
+
+model DocumentVersion {
+  id          Int      @id @default(autoincrement())
+  documentId  Int
+  title       String   @db.VarChar(200)
+  content     Json
+  contentText String   @default("")
+  createdBy   Int
+  createdAt   DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  author   User     @relation("DocumentVersions", fields: [createdBy], references: [id])
+
+  @@index([documentId, createdAt])
 }
 
 model DirectMessage {
@@ -190,12 +263,12 @@ model DirectMessage {
   deletedAt  DateTime?
   readAt     DateTime?
 
-  fromUser   User             @relation("SentMessages", fields: [fromUserId], references: [id])
-  toUser     User             @relation("ReceivedMessages", fields: [toUserId], references: [id])
-  parent     DirectMessage?   @relation("DMThread", fields: [threadId], references: [id])
-  replies    DirectMessage[]  @relation("DMThread")
-  reactions  DMReaction[]
-  files      File[]
+  fromUser  User            @relation("SentMessages", fields: [fromUserId], references: [id])
+  toUser    User            @relation("ReceivedMessages", fields: [toUserId], references: [id])
+  parent    DirectMessage?  @relation("DMThread", fields: [threadId], references: [id])
+  replies   DirectMessage[] @relation("DMThread")
+  reactions DMReaction[]
+  files     File[]
 
   @@index([fromUserId, toUserId])
   @@index([toUserId, fromUserId])
@@ -209,8 +282,8 @@ model DMReaction {
   dmId      Int
   createdAt DateTime @default(now())
 
-  user User           @relation(fields: [userId], references: [id])
-  dm   DirectMessage   @relation(fields: [dmId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id])
+  dm   DirectMessage @relation(fields: [dmId], references: [id], onDelete: Cascade)
 
   @@unique([userId, dmId, emoji])
   @@index([dmId])
@@ -273,18 +346,18 @@ model PushSubscription {
 }
 
 model Webhook {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(100)
-  channelId   Int
-  token       String    @unique @db.VarChar(64)
-  createdBy   Int
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
-  lastUsedAt  DateTime?
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(100)
+  channelId  Int
+  token      String    @unique @db.VarChar(64)
+  createdBy  Int
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @default(now()) @updatedAt
+  lastUsedAt DateTime?
 
-  channel     Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  creator     User      @relation(fields: [createdBy], references: [id])
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  creator User    @relation(fields: [createdBy], references: [id])
 
   @@index([channelId])
   @@index([token])

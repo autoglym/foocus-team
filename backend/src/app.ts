@@ -26,6 +26,7 @@ import adminRoutes from './routes/admin.js';
 import pushRoutes from './routes/push.js';
 import unfurlRoutes from './routes/unfurl.js';
 import googleAuthRoutes from './routes/googleAuth.js';
+import documentRoutes from './routes/documents.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authMiddleware } from './middleware/auth.js';
 import { JWT_SECRET } from './config.js';
@@ -56,7 +57,9 @@ app.use(helmet({
 const corsOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173');
 app.use(cors({ origin: corsOrigin as string | boolean }));
 app.use(compression());
-app.use(express.json({ limit: '100kb' }));
+// Documents can be large (BlockNote JSON); everything else keeps the small limit
+app.use((req, res, next) =>
+  express.json({ limit: req.path.startsWith('/documents') || /^\/channels\/\d+\/documents/.test(req.path) ? '2mb' : '100kb' })(req, res, next));
 
 // Rate limiting (skip in test environment)
 const isTest = process.env.NODE_ENV === 'test';
@@ -97,7 +100,8 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/auth') || req.path.startsWith('/channels') || req.path.startsWith('/messages') ||
       req.path.startsWith('/files') || req.path.startsWith('/users') || req.path.startsWith('/dms') ||
       req.path.startsWith('/search') || req.path.startsWith('/bookmarks') || req.path.startsWith('/admin') ||
-      req.path.startsWith('/push')) {
+      req.path.startsWith('/push') || req.path.startsWith('/documents') || req.path.startsWith('/folders') ||
+      req.path.startsWith('/library')) {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();
@@ -145,6 +149,9 @@ app.use('/messages', apiLimiter, scheduledMessageRoutes);
 app.use('/admin', apiLimiter, adminRoutes);
 app.use('/push', apiLimiter, pushRoutes);
 app.use('/unfurl', apiLimiter, unfurlRoutes);
+// Folders, documents and library files (/channels/:id/library, /documents, /folders, /library)
+app.use(['/documents', '/folders', '/library'], apiLimiter);
+app.use(documentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

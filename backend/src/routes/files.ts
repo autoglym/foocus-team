@@ -13,6 +13,7 @@ import { AuthRequest } from '../types.js';
 import { parseIntParam } from '../utils/params.js';
 import { logError } from '../utils/logger.js';
 import { JWT_SECRET } from '../config.js';
+import { getIO } from '../websocket/index.js';
 import * as fileStorage from '../services/fileStorage.js';
 
 // Maximum file size in MB (configurable via environment variable, defaults to 50MB)
@@ -187,6 +188,37 @@ router.post('/', authMiddleware, uploadLimiter, (req: AuthRequest, res: Response
     }
     const messageId = rawMessageId;
 
+    // Library upload (Docs tab): file goes straight into a channel, optionally a folder
+    const libraryChannelId = req.body?.channelId ? parseInt(req.body.channelId) : undefined;
+    const libraryFolderId = req.body?.folderId ? parseInt(req.body.folderId) : undefined;
+    if ((libraryChannelId !== undefined && isNaN(libraryChannelId)) ||
+        (libraryFolderId !== undefined && isNaN(libraryFolderId)) ||
+        (libraryFolderId !== undefined && libraryChannelId === undefined) ||
+        (libraryChannelId !== undefined && messageId !== undefined)) {
+      fs.unlinkSync(file.path);
+      res.status(400).json({ error: 'Invalid library location' });
+      return;
+    }
+    if (libraryChannelId !== undefined) {
+      const [membership, channel, folder] = await Promise.all([
+        prisma.channelMember.findUnique({ where: { userId_channelId: { userId, channelId: libraryChannelId } } }),
+        prisma.channel.findUnique({ where: { id: libraryChannelId }, select: { archivedAt: true } }),
+        libraryFolderId !== undefined
+          ? prisma.folder.findUnique({ where: { id: libraryFolderId }, select: { channelId: true } })
+          : Promise.resolve(null),
+      ]);
+      if (!membership || !channel || (libraryFolderId !== undefined && folder?.channelId !== libraryChannelId)) {
+        fs.unlinkSync(file.path);
+        res.status(404).json({ error: 'Folder not found' });
+        return;
+      }
+      if (channel.archivedAt) {
+        fs.unlinkSync(file.path);
+        res.status(403).json({ error: 'This channel has been archived' });
+        return;
+      }
+    }
+
     // If messageId is provided, verify user owns the message and has channel access
     if (messageId) {
       const message = await prisma.message.findUnique({
@@ -264,6 +296,8 @@ router.post('/', authMiddleware, uploadLimiter, (req: AuthRequest, res: Response
         storagePath,
         userId,
         messageId,
+        channelId: libraryChannelId ?? null,
+        folderId: libraryFolderId ?? null,
       },
       include: {
         user: {
@@ -279,6 +313,10 @@ router.post('/', authMiddleware, uploadLimiter, (req: AuthRequest, res: Response
       data: { url: downloadUrl },
     });
     fileRecord.url = downloadUrl;
+
+    if (libraryChannelId !== undefined) {
+      getIO()?.to(`channel:${libraryChannelId}`).emit('library:changed', { channelId: libraryChannelId, folderId: libraryFolderId ?? null });
+    }
 
     res.status(201).json(stripInternalFields(fileRecord));
   } catch (error) {

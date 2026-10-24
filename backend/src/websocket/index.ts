@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
@@ -50,6 +51,7 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'message:edit': { max: 20, windowMs: 60_000 },
   'message:delete': { max: 20, windowMs: 60_000 },
   'typing:start': { max: 60, windowMs: 60_000 },
+  'document:editing': { max: 60, windowMs: 60_000 },
   'typing:stop': { max: 60, windowMs: 60_000 },
   'dm:typing:start': { max: 60, windowMs: 60_000 },
   'dm:typing:stop': { max: 60, windowMs: 60_000 },
@@ -567,6 +569,32 @@ export function initializeWebSocket(httpServer: HttpServer) {
 
       socket.to(`channel:${channelId}`).emit('typing:start', {
         userId: socket.user.userId,
+      });
+    });
+
+    // "Glenn is editing" presence for documents. Clients send editing:true as a
+    // heartbeat while they type and editing:false when they leave; viewers expire
+    // stale entries themselves (no heartbeat for ~45 s).
+    socket.on('document:editing', async (raw: unknown) => {
+      if (!socket.user) return;
+      if (!checkRateLimit(socket.user.userId, 'document:editing')) return;
+      const parsed = z.object({ documentId: z.number().int().positive(), editing: z.boolean() }).safeParse(raw);
+      if (!parsed.success) return;
+
+      const doc = await prisma.document.findUnique({
+        where: { id: parsed.data.documentId },
+        select: { channelId: true, deletedAt: true },
+      });
+      if (!doc || doc.deletedAt) return;
+      const isMember = await cachedCheckMembership(socket.user.userId, doc.channelId);
+      if (!isMember) return;
+      const user = await prisma.user.findUnique({ where: { id: socket.user.userId }, select: { name: true } });
+
+      socket.to(`channel:${doc.channelId}`).emit('document:editing', {
+        documentId: parsed.data.documentId,
+        userId: socket.user.userId,
+        name: user?.name ?? 'Someone',
+        editing: parsed.data.editing,
       });
     });
 

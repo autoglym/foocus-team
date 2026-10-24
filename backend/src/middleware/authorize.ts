@@ -110,6 +110,12 @@ export async function verifyFileAccess(
       where: { userId_channelId: { userId, channelId: message.channelId } },
     });
     if (!membership) return null;
+  } else if (file.channelId) {
+    // Library file (Docs tab): visible to channel members
+    const membership = await prisma.channelMember.findUnique({
+      where: { userId_channelId: { userId, channelId: file.channelId } },
+    });
+    if (!membership) return null;
   } else if (file.dmId) {
     const dm = await prisma.directMessage.findUnique({
       where: { id: file.dmId },

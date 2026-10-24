@@ -15,7 +15,10 @@ beforeAll(async () => {
   await prisma.bookmark.deleteMany();
   await prisma.scheduledMessage.deleteMany();
   await prisma.reaction.deleteMany();
+  await prisma.documentVersion.deleteMany();
+  await prisma.document.deleteMany();
   await prisma.file.deleteMany();
+  await prisma.folder.deleteMany();
   await prisma.message.deleteMany();
   await prisma.channelRead.deleteMany();
   await prisma.channelMember.deleteMany();
