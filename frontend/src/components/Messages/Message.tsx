@@ -101,16 +101,16 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
   return (
     <div
       className={cn(
-        'group relative flex px-5',
+        'group relative flex mx-3 px-3 rounded-2xl transition-colors duration-150',
         message.isPinned ? 'bg-slack-pinned hover:bg-slack-pinned' : 'hover:bg-slack-hover',
-        showAvatar ? 'pt-2 pb-px' : 'py-px'
+        showAvatar ? 'mt-3 pt-2 pb-1' : 'py-[2px]'
       )}
       onMouseEnter={onMouseEnter}
       onMouseLeave={() => onMouseLeave(() => setShowMoreMenu(false))}
       onTouchStart={onTouchStart}
     >
-      {/* Fixed 36px left gutter column with 8px gap to content */}
-      <div className="w-9 flex-shrink-0 mr-2">
+      {/* Fixed 36px left gutter column with 12px gap to content */}
+      <div className="w-9 flex-shrink-0 mr-3">
         {showAvatar ? (
           <button onClick={() => openProfile(message.userId)}>
             <Avatar
@@ -135,7 +135,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
             <button
               data-testid="sender-name"
               onClick={() => openProfile(message.userId)}
-              className="text-[15px] font-bold text-slack-primary hover:underline"
+              className="text-[15px] font-semibold text-slack-primary hover:underline"
             >
               {message.user.displayName || message.user.name}
             </button>
@@ -240,7 +240,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
               <div
                 key={file.id}
                 data-testid="message-file"
-                className="rounded-lg border border-slack-border overflow-hidden"
+                className="rounded-2xl neu-raised-sm overflow-hidden"
               >
                 {file.mimetype.startsWith('audio/') || (file.mimetype === 'video/webm' && file.originalName.startsWith('voice-message')) ? (
                   <div className="px-3 py-2.5">
@@ -262,7 +262,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
                       className="max-h-[300px] max-w-full"
                       src={getFileUrl(file.id)}
                     />
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-t border-slack-border">
+                    <div className="flex items-center gap-2 px-3 py-1.5 border-t border-slack-border/60">
                       <span className="text-[13px] text-slack-link truncate max-w-[200px]">
                         {file.originalName}
                       </span>
@@ -292,7 +292,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
                         className="max-h-[200px] max-w-[300px] object-contain"
                       />
                     </button>
-                    <div className="flex items-center gap-2 px-3 py-1.5 border-t border-slack-border">
+                    <div className="flex items-center gap-2 px-3 py-1.5 border-t border-slack-border/60">
                       <span data-testid="image-filename" className="text-[13px] text-slack-link truncate max-w-[200px]">
                         {file.originalName}
                       </span>
@@ -311,7 +311,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 px-3 py-2.5 border-l-4 border-slack-link">
+                  <div className="flex items-center gap-3 px-3 py-2.5 border-l-[3px] border-slack-btn">
                     <FileIcon className="h-8 w-8 text-slack-link flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <button

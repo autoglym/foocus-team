@@ -29,9 +29,11 @@
   --color-slack-link: #2A5A76;
   --color-slack-link-hover: #1F4459;
 
-  /* Surface / Background — Foocus parchment */
-  --color-slack-hover: #F5F4F0;
-  --color-slack-active-tab: #EEEDE8;
+  /* Surface / Background — Foocus parchment. The content area sits on one
+     soft "fog" tone so neumorphic (extruded / pressed) elements read. */
+  --color-slack-surface: #F4F3EF;
+  --color-slack-hover: #FFFFFF;
+  --color-slack-active-tab: #E2E0D9;
   --color-slack-pinned: #FCF6E5;
   --color-slack-success: #DBECE4;
   --color-slack-highlight: #EAF0F4;
@@ -81,6 +83,30 @@
   --color-slack-file-archive: #B08A2E;
 }
 
+/* ──────────────────────────────────────────────────────────
+   Depth — calm, Apple-like elevation with a light neumorphic touch:
+   raised elements are white with a diffuse shadow and a hairline top
+   highlight; wells (text fields) are softly pressed into the surface.
+   ────────────────────────────────────────────────────────── */
+:root {
+  --shadow-float: 0 1px 2px rgba(15, 17, 24, 0.05), 0 12px 32px -8px rgba(15, 17, 24, 0.12);
+  --shadow-float-sm: 0 1px 2px rgba(15, 17, 24, 0.06), 0 4px 12px -4px rgba(15, 17, 24, 0.10);
+  --shadow-well: inset 0 1px 3px rgba(15, 17, 24, 0.07), inset 0 0 0 1px rgba(15, 17, 24, 0.04);
+}
+
+@utility neu-raised {
+  background-color: #FFFFFF;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), var(--shadow-float);
+}
+@utility neu-raised-sm {
+  background-color: #FFFFFF;
+  box-shadow: var(--shadow-float-sm);
+}
+@utility neu-inset {
+  background-color: var(--color-slack-surface);
+  box-shadow: var(--shadow-well);
+}
+
 /* Non-color design tokens */
 :root {
   /* Font Sizes */
@@ -126,7 +152,7 @@ body {
   line-height: 1.46668;
   letter-spacing: -0.01em;
   color: var(--color-slack-primary);
-  background-color: #ffffff;
+  background-color: var(--color-slack-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -156,8 +182,15 @@ body {
   font-family: inherit;
 }
 
+.slawk-editor .ql-container {
+  margin: 2px 6px 6px;
+  border-radius: 14px;
+  background-color: var(--color-slack-surface);
+  box-shadow: var(--shadow-well);
+}
+
 .slawk-editor .ql-editor {
-  padding: 8px 12px;
+  padding: 10px 14px;
   font-size: 15px;
   line-height: 22px;
   color: var(--color-slack-primary);

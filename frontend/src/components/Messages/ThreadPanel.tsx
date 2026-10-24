@@ -310,7 +310,7 @@ export function ThreadPanel({ messageId, onClose, onReplyCountChange, variant = 
   return (
     <div
       data-testid={`${testPrefix}-panel`}
-      className="flex w-full md:w-[380px] flex-col border-l border-slack-border bg-white absolute inset-0 md:static md:inset-auto z-30 md:z-auto"
+      className="flex w-full md:w-[380px] flex-col border-l border-slack-border bg-slack-surface absolute inset-0 md:static md:inset-auto z-30 md:z-auto"
     >
       <PanelHeader title="Thread" onClose={onClose} />
 

@@ -88,14 +88,14 @@ export function HeaderSearch({ testIdPrefix = '' }: HeaderSearchProps) {
 
   return (
     <div className="relative" ref={searchRef}>
-      <Search className="absolute left-2 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-slack-secondary" />
+      <Search className="absolute left-3 top-1/2 h-[14px] w-[14px] -translate-y-1/2 text-slack-secondary" />
       <input
         type="text"
         placeholder="Search"
         value={searchQuery}
         onChange={handleSearchChange}
         onKeyDown={handleSearchKeyDown}
-        className="h-[26px] w-[140px] rounded-md border border-slack-border bg-white pl-7 pr-2 text-[13px] placeholder:text-slack-secondary focus:outline-none focus:border-slack-link focus:w-[240px] transition-all"
+        className="h-[30px] w-[160px] rounded-full neu-inset border-0 pl-8 pr-3 text-[13px] placeholder:text-slack-secondary focus:outline-none focus:ring-2 focus:ring-slack-btn/40 focus:w-[240px] transition-all"
       />
       {showResults && (
         <div data-testid={`${prefix}search-results-dropdown`} className="absolute right-0 top-8 z-50 w-[360px] max-h-[400px] overflow-y-auto rounded-lg border border-slack-border bg-white shadow-lg">

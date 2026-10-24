@@ -144,7 +144,7 @@ export function MessageList({ channelId, onOpenThread, readOnly }: MessageListPr
   }
 
   return (
-    <div ref={containerRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto pt-5 pb-4 bg-white">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto pt-3 pb-4 bg-slack-surface">
       {messages.map((message, index) => {
         const previousMessage = messages[index - 1];
         const showDateSeparator = shouldShowDateSeparator(message, previousMessage);

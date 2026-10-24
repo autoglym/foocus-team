@@ -55,7 +55,7 @@ function ReactionPill({
           'inline-flex h-[22px] items-center gap-1 rounded-[12px] border px-[6px] text-[12px] transition-colors',
           hasReacted
             ? 'border-slack-link bg-slack-highlight text-slack-link'
-            : 'border-slack-border bg-white text-slack-primary hover:bg-slack-hover'
+            : 'border-transparent bg-white text-slack-primary shadow-[0_1px_2px_rgba(15,17,24,0.08)] hover:bg-slack-hover'
         )}
       >
         <span data-testid="reaction-emoji" className="text-sm leading-none">{shortcodeToNative(reaction.emoji)}</span>

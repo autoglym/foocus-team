@@ -27,13 +27,13 @@ export function SidebarItem({
       data-active={isActive}
       data-testid={testId}
       className={cn(
-        'flex w-full items-center gap-2 h-[28px] text-[15px] transition-all rounded-[6px] text-left',
-        'mx-2 w-[calc(100%-16px)] px-4',
+        'flex w-full items-center gap-2 h-[30px] text-[15px] transition-colors duration-150 rounded-[10px] text-left',
+        'mx-2 w-[calc(100%-16px)] px-3',
         isActive
-          ? 'bg-slack-btn text-white font-bold'
+          ? 'bg-slack-btn text-white font-semibold shadow-[0_4px_14px_-4px_rgba(52,111,145,0.7)]'
           : hasUnread
-            ? 'text-white font-bold hover:bg-white/10'
-            : 'text-white/70 font-normal hover:bg-white/10'
+            ? 'text-white font-semibold hover:bg-white/[0.06]'
+            : 'text-white/65 font-normal hover:bg-white/[0.06] hover:text-white/90'
       )}
     >
       {leftSlot}

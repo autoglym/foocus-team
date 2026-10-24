@@ -51,20 +51,20 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slack-hover">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slack-surface px-4">
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="mb-6 flex items-center justify-center">
           <Wordmark />
         </div>
-        <h1 className="text-4xl font-bold text-slack-primary">Create your account</h1>
+        <h1 className="font-heading text-[34px] font-semibold tracking-tight text-slack-primary">Create your account</h1>
         <p className="mt-2 text-gray-600">
           We suggest using the <strong>email address you use at work.</strong>
         </p>
       </div>
 
       {/* Register Form */}
-      <div className="w-full max-w-[400px] px-4">
+      <div className="w-full max-w-[420px] rounded-[28px] neu-raised p-8">
         {/* Invite Banner */}
         {inviteCode && inviteValid === true && (
           <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700">

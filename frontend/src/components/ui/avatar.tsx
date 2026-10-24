@@ -54,7 +54,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         <div
           className={cn(
             'relative flex shrink-0 overflow-hidden bg-gray-200',
-            size === 'sm' ? 'rounded-[4px]' : 'rounded-lg',
+            'rounded-full',
             sizeClasses[size],
             className
           )}

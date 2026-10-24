@@ -123,7 +123,7 @@ export function MessageArea() {
         />
         <MessageList channelId={activeChannelId!} onOpenThread={handleOpenThread} readOnly={readOnly} />
         {readOnly ? (
-          <div className="px-5 pb-4 pt-3 bg-white border-t border-slack-border">
+          <div className="px-5 pb-4 pt-3 bg-slack-surface border-t border-slack-border">
             <div className="flex items-center justify-center gap-3 rounded-lg border border-slack-border p-4">
               <Hash className="h-4 w-4 text-slack-secondary" />
               <span className="text-[15px] text-slack-secondary">You're viewing <b>#{activeChannel.name}</b></span>

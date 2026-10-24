@@ -154,8 +154,8 @@ export const MessageInput = React.memo(function MessageInput({ placeholder, onSe
   const hasContent = editor.canSend || editor.pendingFiles.length > 0;
 
   return (
-    <div className="relative px-5 pb-6 pt-4 bg-white">
-      <div className="slawk-editor rounded-[8px] border border-slack-border-light">
+    <div className="relative px-5 pb-5 pt-3 bg-slack-surface">
+      <div className="slawk-editor neu-raised rounded-[20px] px-1 pt-1">
         <FormatToolbar onApplyFormat={editor.applyFormat} />
         <FilePreview files={editor.pendingFiles} onRemove={editor.removePendingFile} />
 

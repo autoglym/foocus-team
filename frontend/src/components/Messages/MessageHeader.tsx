@@ -78,7 +78,7 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
   };
 
   return (
-    <header className="flex flex-col flex-shrink-0 border-b border-slack-border bg-white pt-[env(safe-area-inset-top)]">
+    <header className="relative z-10 flex flex-col flex-shrink-0 bg-slack-surface shadow-[0_1px_0_rgba(15,17,24,0.06)] pt-[env(safe-area-inset-top)]">
       {/* Top Row - Channel name and actions */}
       <div className="flex h-[49px] items-center justify-between px-4">
         {/* Left Section */}
@@ -94,7 +94,7 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
             className="flex items-center gap-1 px-1.5 py-0.5"
           >
             {channel.isPrivate ? <Lock className="h-[16px] w-[16px] text-slack-secondary" /> : <Hash className="h-[16px] w-[16px] text-slack-secondary" />}
-            <span className="text-[18px] font-black text-slack-primary">{channel.name}</span>
+            <span className="font-heading text-[18px] font-bold tracking-tight text-slack-primary">{channel.name}</span>
           </div>
           {!readOnly && (
             <Button
