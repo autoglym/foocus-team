@@ -388,3 +388,18 @@ model KpiValue {
 
   @@index([metricId, capturedAt])
 }
+
+// LinkedIn company page, imported from LinkedIn's Analytics → Content export
+// (one row per day; re-importing overwrites the same days).
+model LinkedinDailyMetric {
+  id                   Int      @id @default(autoincrement())
+  date                 DateTime @unique @db.Date
+  impressions          Int      @default(0)
+  impressionsSponsored Int      @default(0)
+  uniqueImpressions    Int      @default(0)
+  clicks               Int      @default(0)
+  reactions            Int      @default(0)
+  comments             Int      @default(0)
+  reposts              Int      @default(0)
+  importedAt           DateTime @default(now())
+}

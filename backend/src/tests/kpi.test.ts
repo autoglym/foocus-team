@@ -2,6 +2,7 @@ import { TEST_PASSWORD } from './test-constants.js';
 import request from 'supertest';
 import app from '../app.js';
 import prisma from '../db.js';
+import * as XLSX from 'xlsx';
 
 describe('KPI dashboard', () => {
   let admin: string;
@@ -61,5 +62,58 @@ describe('KPI dashboard', () => {
     const crm = await prisma.kpiMetric.create({ data: { key: 'crm_arr', label: 'ARR', unit: 'NOK', source: 'crm' } });
     const res = await request(app).post(`/kpi/metrics/${crm.id}/values`).set('Authorization', `Bearer ${admin}`).send({ value: 1 });
     expect(res.status).toBe(400);
+  });
+
+  describe('LinkedIn import', () => {
+    const exportFile = (rows: Array<[string, number, number, number]>) => {
+      // Same shape as LinkedIn's export: a description line, then the header row
+      const sheet = XLSX.utils.aoa_to_sheet([
+        ['Aggregated engagement metrics for your organic and sponsored posts over time.'],
+        ['Date', 'Impressions (organic)', 'Impressions (sponsored)', 'Impressions (total)', 'Unique impressions (organic)',
+          'Clicks (organic)', 'Clicks (sponsored)', 'Clicks (total)', 'Reactions (organic)', 'Reactions (sponsored)',
+          'Reactions (total)', 'Comments (organic)', 'Comments (sponsored)', 'Comments (total)', 'Reposts (organic)',
+          'Reposts (sponsored)', 'Reposts (total)', 'Engagement rate (organic)', 'Engagement rate (sponsored)', 'Engagement rate (total)'],
+        ...rows.map(([date, impressions, clicks, reactions]) => [
+          date, impressions, 0, impressions, impressions, clicks, 0, clicks, reactions, 0, reactions, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        ]),
+      ]);
+      const book = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(book, sheet, 'Metrics');
+      return XLSX.write(book, { type: 'buffer', bookType: 'xls' }) as Buffer;
+    };
+
+    it('imports the Content export, overwrites re-imported days and summarises the last 30 days', async () => {
+      const auth = { Authorization: `Bearer ${admin}` };
+      const first = await request(app).post('/kpi/linkedin/import').set(auth)
+        .attach('file', exportFile([['9/1/2026', 100, 5, 1], ['10/20/2026', 40, 2, 0], ['10/21/2026', 60, 3, 1]]), 'content.xls');
+      expect(first.status).toBe(200);
+      expect(first.body.days).toBe(3);
+
+      // Re-import with a corrected day
+      await request(app).post('/kpi/linkedin/import').set(auth)
+        .attach('file', exportFile([['10/21/2026', 80, 4, 2]]), 'content.xls');
+
+      const res = await request(app).get('/kpi/dashboard').set(auth);
+      const li = res.body.linkedin;
+      expect(li.hasData).toBe(true);
+      expect(li.latestDate.slice(0, 10)).toBe('2026-10-21');
+      expect(li.last30.impressions).toBe(120);
+      expect(li.last30.clicks).toBe(6);
+      expect(li.previous30.impressions).toBe(100);
+      expect(li.last30.engagementRate).toBeCloseTo((6 + 2) / 120);
+    });
+
+    it('rejects files that are not a LinkedIn Content export', async () => {
+      const res = await request(app).post('/kpi/linkedin/import').set('Authorization', `Bearer ${admin}`)
+        .attach('file', Buffer.from('name,value\nfoo,1'), 'other.csv');
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/LinkedIn Content export/);
+    });
+
+    it('is admin-only', async () => {
+      const res = await request(app).post('/kpi/linkedin/import').set('Authorization', `Bearer ${member}`)
+        .attach('file', Buffer.from('x'), 'x.csv');
+      expect(res.status).toBe(403);
+    });
   });
 });

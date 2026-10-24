@@ -12,6 +12,8 @@ import {
   type CrmSummary, type StageRow,
 } from '../services/crmKpi.js';
 import { isGa4Configured, fetchGa4, type Ga4Result } from '../services/ga4.js';
+import multer from 'multer';
+import { importLinkedinContent, linkedinSummary, LinkedinImportError } from '../services/linkedinImport.js';
 
 // Commercial dashboard — owners and admins only.
 const router = Router();
@@ -124,7 +126,9 @@ router.get('/dashboard', async (_req: AuthRequest, res: Response) => {
       }
     }
 
-    res.json({ crm, ga4, metrics: result });
+    const linkedin = await linkedinSummary();
+
+    res.json({ crm, ga4, linkedin, metrics: result });
   } catch (error) {
     logError('KPI dashboard error', error);
     res.status(500).json({ error: 'Failed to load the dashboard' });
@@ -136,6 +140,29 @@ function thinDaily<T extends { capturedAt: Date }>(points: T[]): T[] {
   for (const p of points) byDay.set(p.capturedAt.toISOString().slice(0, 10), p);
   return [...byDay.values()];
 }
+
+// ── LinkedIn import ──────────────────────────────────────────────────
+
+// Kept in memory only; LinkedIn exports are small spreadsheets
+const linkedinUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
+
+// POST /kpi/linkedin/import - LinkedIn page Analytics → Content export (.xls/.xlsx/.csv)
+router.post('/linkedin/import', (req, res, next) => {
+  linkedinUpload.single('file')(req, res, (err: unknown) => {
+    if (err) return void res.status(400).json({ error: 'The file is too large or could not be uploaded' });
+    next();
+  });
+}, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) return void res.status(400).json({ error: 'Choose a LinkedIn export file' });
+    const result = await importLinkedinContent(req.file.buffer);
+    res.json(result);
+  } catch (error) {
+    if (error instanceof LinkedinImportError) return void res.status(400).json({ error: error.message });
+    logError('LinkedIn import error', error);
+    res.status(500).json({ error: 'Failed to import the LinkedIn file' });
+  }
+});
 
 // ── Manual metrics ───────────────────────────────────────────────────
 

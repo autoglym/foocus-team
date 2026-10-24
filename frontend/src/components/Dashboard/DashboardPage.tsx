@@ -13,7 +13,7 @@ interface Metric {
   key: string;
   label: string;
   unit: Unit;
-  source: 'crm' | 'manual' | 'ga4';
+  source: 'crm' | 'manual' | 'ga4' | 'linkedin';
   /** Overrides "vs <date>" in the change line, e.g. "vs previous 30 days" */
   compareLabel?: string;
   current: number | null;
@@ -24,7 +24,17 @@ interface Metric {
 }
 interface StageRow { stage: string; deals: number; total: number; weighted: number }
 interface Ga4Metric { key: string; label: string; current: number; previous: number; history: Array<{ date: string; value: number }> }
+interface LiTotals { impressions: number; clicks: number; reactions: number; comments: number; reposts: number; engagementRate: number | null }
+type LinkedinSummary =
+  | { hasData: false }
+  | {
+      hasData: true; lastImportAt: string; latestDate: string; firstDate: string;
+      last30: LiTotals; previous30: LiTotals;
+      daily: Array<{ date: string; impressions: number }>;
+      monthly: Array<LiTotals & { month: string }>;
+    };
 interface Dashboard {
+  linkedin: LinkedinSummary;
   crm: { configured: boolean; ok: boolean; error?: string; fetchedAt?: string; pipelineByStage?: StageRow[] };
   ga4: {
     configured: boolean; ok: boolean; error?: string; fetchedAt?: string; metrics?: Ga4Metric[];
@@ -127,6 +137,8 @@ export function DashboardPage() {
                 )}
               </section>
             )}
+
+            <LinkedinSection summary={data.linkedin} onImported={load} />
 
             <section aria-labelledby="manual-heading" className="mt-8">
               <div className="mb-3 flex items-center gap-3">
@@ -526,5 +538,143 @@ function TopPages({ pages }: { pages: Array<{ path: string; title: string; views
         </table>
       )}
     </section>
+  );
+}
+
+function LinkedinSection({ summary, onImported }: { summary: LinkedinSummary; onImported: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+
+  const upload = async (file: File) => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const token = localStorage.getItem('token');
+      const res = await fetch('/kpi/linkedin/import', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || 'Import failed');
+      setMessage({
+        tone: 'ok',
+        text: `Imported ${body.days} days (${format(new Date(body.from), 'd MMM yyyy')} – ${format(new Date(body.to), 'd MMM yyyy')}).`,
+      });
+      await onImported();
+    } catch (err) {
+      setMessage({ tone: 'error', text: err instanceof Error ? err.message : 'Import failed' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const tiles: Metric[] = [];
+  if (summary.hasData) {
+    const at = summary.latestDate;
+    const tile = (key: string, label: string, unit: Unit, current: number | null, previous: number | null, history: Point[] = []): Metric => ({
+      id: -100 - tiles.length, key, label, unit, source: 'linkedin', current, updatedAt: at,
+      previous: previous === null ? null : { value: previous, capturedAt: at }, compareLabel: 'vs previous 30 days',
+      trackingSince: summary.firstDate, history,
+    });
+    const { last30: c, previous30: p } = summary;
+    tiles.push(
+      tile('li_impressions', 'Impressions', 'count', c.impressions, p.impressions,
+        summary.daily.map((d, i) => ({ id: i, value: d.impressions, capturedAt: d.date }))),
+      // No impressions → no rate (shown as —), rather than a misleading 0 %
+      tile('li_engagement', 'Engagement rate', 'percent',
+        c.engagementRate === null ? null : c.engagementRate * 100, p.engagementRate === null ? null : p.engagementRate * 100),
+      tile('li_clicks', 'Clicks', 'count', c.clicks, p.clicks),
+      tile('li_interactions', 'Reactions, comments & reposts', 'count',
+        c.reactions + c.comments + c.reposts, p.reactions + p.comments + p.reposts),
+    );
+  }
+
+  return (
+    <section aria-labelledby="linkedin-heading" className="mt-8">
+      <h2 id="linkedin-heading" className="mb-3 text-[13px] font-medium text-slack-secondary">
+        LinkedIn · company page{summary.hasData && <>, last 30 days to {format(new Date(summary.latestDate), 'd MMM yyyy')}</>}
+      </h2>
+
+      {summary.hasData && (
+        <>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
+            {tiles.map((t) => <MetricTile key={t.key} metric={t} onChanged={onImported} />)}
+          </div>
+          <MonthlyImpressions months={summary.monthly} />
+        </>
+      )}
+
+      <div
+        className={cn(
+          'mt-5 flex flex-wrap items-center gap-4 rounded-[24px] neu-inset px-5 py-4 transition-shadow',
+          dragOver && 'ring-2 ring-slack-btn/50',
+        )}
+        onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragOver(true); } }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          const file = e.dataTransfer.files[0];
+          if (file) void upload(file);
+        }}
+        data-testid="linkedin-import"
+      >
+        <div className="min-w-0 flex-1 text-[13px] text-slack-secondary">
+          <p className="font-medium text-slack-primary">
+            {summary.hasData ? 'Update with a new export' : 'Import LinkedIn analytics'}
+          </p>
+          <p>
+            On the Foocus LinkedIn page, open <b>Analytics → Content</b>, choose <b>Export</b> (last 365 days),
+            then drop the file here. Re-importing replaces the same days.
+            {summary.hasData && <> Last import {formatDistanceToNow(new Date(summary.lastImportAt), { addSuffix: true })}.</>}
+          </p>
+          {message && (
+            <p className={cn('mt-1', message.tone === 'error' ? 'text-slack-error' : 'text-[#1F8854]')} role="status">{message.text}</p>
+          )}
+        </div>
+        <Button onClick={() => input.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Choose file'}</Button>
+        <input
+          ref={input}
+          type="file"
+          accept=".xls,.xlsx,.csv"
+          hidden
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = ''; }}
+        />
+      </div>
+    </section>
+  );
+}
+
+/** Vertical bars: impressions per month, with per-bar hover. */
+function MonthlyImpressions({ months }: { months: Array<LiTotals & { month: string }> }) {
+  const [hover, setHover] = useState<string | null>(null);
+  if (months.length === 0) return null;
+  const max = Math.max(...months.map((m) => m.impressions), 1);
+  return (
+    <div className="mt-5 rounded-[24px] neu-raised px-6 py-5">
+      <h3 className="font-heading text-[16px] font-bold text-slack-primary">Impressions per month</h3>
+      <p className="mb-4 text-[12px] text-slack-hint">Organic and sponsored, from the LinkedIn export</p>
+      <div className="flex h-[140px] items-end gap-2" role="img"
+        aria-label={`Impressions per month: ${months.map((m) => `${format(new Date(`${m.month}-01`), 'MMM yyyy')} ${m.impressions}`).join(', ')}`}>
+        {months.map((m) => (
+          <div key={m.month} className="relative flex h-full flex-1 flex-col items-center justify-end gap-1.5"
+            onMouseEnter={() => setHover(m.month)} onMouseLeave={() => setHover(null)}>
+            {hover === m.month && (
+              <span className="absolute -top-8 z-10 whitespace-nowrap rounded-lg bg-slack-primary px-2 py-1 text-[11px] text-white">
+                {format(new Date(`${m.month}-01`), 'MMM yyyy')}: {num.format(m.impressions)} impressions · {num.format(m.clicks)} clicks
+              </span>
+            )}
+            <span className="w-full max-w-[28px] rounded-t-[4px] bg-[var(--color-chart-1)]"
+              style={{ height: `${Math.max((m.impressions / max) * 100, m.impressions > 0 ? 3 : 0)}%` }} />
+            <span className="text-[11px] text-slack-hint">{format(new Date(`${m.month}-01`), 'MMM')}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
