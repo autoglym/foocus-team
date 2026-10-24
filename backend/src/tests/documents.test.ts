@@ -51,6 +51,7 @@ describe('Documents and folders', () => {
       { type: 'table', content: { type: 'tableContent', rows: [{ cells: [[{ type: 'text', text: 'A' }], [{ type: 'text', text: 'B' }]] }] }, children: [] },
     ]);
     expect(text).toBe('Møtereferat\nSe lenke\nUnderpunkt\nA | B');
+    expect(blocksToText([{ type: 'heading', props: { level: 2 }, content: 'Agenda' }])).toBe('Agenda');
   });
 
   it('creates folders and documents and lists them per folder', async () => {

@@ -45,6 +45,8 @@ function deny(res: Response, access: Extract<Access, { ok: false }>) {
 export function blocksToText(blocks: unknown): string {
   const lines: string[] = [];
   const inline = (node: unknown): string => {
+    // Partial blocks (templates, API clients) may use a plain string as content
+    if (typeof node === 'string') return node;
     if (!node || typeof node !== 'object') return '';
     if (Array.isArray(node)) return node.map(inline).join('');
     const n = node as Record<string, unknown>;
@@ -161,6 +163,25 @@ router.get('/channels/:id/library', authMiddleware, async (req: AuthRequest, res
 });
 
 // ── Folders ──────────────────────────────────────────────────────────
+
+// GET /channels/:id/folders - every folder in the channel (flat), for "Move to…"
+router.get('/channels/:id/folders', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const channelId = parseIntParam(req.params.id);
+    if (!channelId) return void res.status(400).json({ error: 'Invalid channel ID' });
+    const access = await channelAccess(req.user!.userId, channelId);
+    if (!access.ok) return deny(res, access);
+    const folders = await prisma.folder.findMany({
+      where: { channelId },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, parentId: true },
+    });
+    res.json(folders);
+  } catch (error) {
+    logError('List folders error', error);
+    res.status(500).json({ error: 'Failed to list folders' });
+  }
+});
 
 const createFolderSchema = z.object({
   name: folderNameSchema,
