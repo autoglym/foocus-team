@@ -13,10 +13,13 @@ import { DMConversation } from './DMConversation';
 import { PinsPanel } from './PinsPanel';
 import { FilesPanel } from './FilesPanel';
 import { channelDisplayName } from '@/lib/channelName';
+import { useLocation } from 'react-router-dom';
+import { ChannelLibrary } from '@/components/Documents/ChannelLibrary';
 
 export function MessageArea() {
   const { activeChannelId, activeDMId, getActiveChannel, getActiveDM } = useChannelStore();
   const activeChannel = getActiveChannel();
+  const location = useLocation();
   const activeDM = getActiveDM();
   const { sendMessage, sendError, clearSendError } = useMessageStore();
   const joinChannel = useChannelStore((s) => s.joinChannel);
@@ -87,6 +90,7 @@ export function MessageArea() {
   }
 
   const readOnly = !activeChannel.isMember;
+  const isDocsView = activeChannel.isMember && /^\/c\/\d+\/docs$/.test(location.pathname);
 
   return (
     <div className="relative flex h-full">
@@ -97,6 +101,7 @@ export function MessageArea() {
           showPins={showPins}
           showFiles={showFiles}
           readOnly={readOnly}
+          view={isDocsView ? 'docs' : 'messages'}
           onToggleMembers={() => {
             setShowMembers(!showMembers);
             if (!showMembers) {
@@ -122,6 +127,10 @@ export function MessageArea() {
             }
           }}
         />
+        {isDocsView ? (
+          <ChannelLibrary channelId={activeChannelId!} />
+        ) : (
+        <>
         <MessageList channelId={activeChannelId!} onOpenThread={handleOpenThread} readOnly={readOnly} />
         {readOnly ? (
           <div className="px-5 pb-4 pt-3 bg-slack-surface border-t border-slack-border">
@@ -144,6 +153,8 @@ export function MessageArea() {
             clearSendError={clearSendError}
             channelId={activeChannelId!}
           />
+        )}
+        </>
         )}
       </div>
       {showMembers && (

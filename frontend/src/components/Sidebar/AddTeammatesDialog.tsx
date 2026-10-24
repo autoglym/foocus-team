@@ -70,7 +70,7 @@ export function AddTeammatesDialog({
   // Portal to <body> so the sidebar's transform doesn't trap the fixed overlay
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-[480px] rounded-[24px] neu-raised p-6">
+      <div className="w-full max-w-[480px] rounded-[24px] neu-dialog p-6">
         <h2 className="font-heading text-[22px] font-bold tracking-tight text-slack-primary mb-1">Direct message</h2>
         <p className="text-[14px] text-slack-hint mb-4">
           Click a person to message them, or use + to add several people to a group.

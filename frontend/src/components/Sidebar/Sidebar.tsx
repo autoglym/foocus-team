@@ -14,6 +14,7 @@ import {
   User,
   Shield,
   Inbox,
+  NotebookText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChannelStore } from '@/stores/useChannelStore';
@@ -45,7 +46,7 @@ export function Sidebar() {
   const closeSidebar = useMobileStore((s) => s.closeSidebar);
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [dmsExpanded, setDmsExpanded] = useState(true);
-  const activeNav = location.pathname === '/unreads' ? 'unreads' : location.pathname === '/files' ? 'files' : location.pathname === '/later' ? 'later' : location.pathname === '/admin' ? 'admin' : 'dms';
+  const activeNav = location.pathname === '/unreads' ? 'unreads' : location.pathname === '/files' ? 'files' : location.pathname === '/docs' ? 'docs' : location.pathname === '/later' ? 'later' : location.pathname === '/admin' ? 'admin' : 'dms';
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showAddChannelDialog, setShowAddChannelDialog] = useState(false);
   const [browseChannels, setBrowseChannels] = useState<Channel[]>([]);
@@ -61,6 +62,7 @@ export function Sidebar() {
     { icon: Inbox, label: 'Unreads', id: 'unreads', badge: totalUnreadCount > 0 ? totalUnreadCount : undefined },
     { icon: Bookmark, label: 'Later', id: 'later' },
     { icon: FileText, label: 'Files', id: 'files' },
+    { icon: NotebookText, label: 'Docs', id: 'docs' },
   ];
 
   // Close avatar menu when clicking outside
@@ -169,6 +171,10 @@ export function Sidebar() {
             key={item.id}
             data-testid={`nav-item-${item.id}`}
             onClick={() => {
+              if (item.id === 'docs') {
+                navTo('/docs');
+                return;
+              }
               if (item.id === 'unreads') {
                 if (activeNav === 'unreads') {
                   const firstChannel = channels.find((ch) => ch.isMember);

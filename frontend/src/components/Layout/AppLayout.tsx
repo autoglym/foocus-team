@@ -10,6 +10,8 @@ import { AdminPage } from '@/components/Admin/AdminPage';
 import { FilesPage } from '@/components/Messages/FilesPage';
 import { UnreadsPage } from '@/components/Messages/UnreadsPage';
 import { LaterPage } from '@/components/Messages/LaterPage';
+import { AllDocumentsPage } from '@/components/Documents/AllDocumentsPage';
+import { DocumentPage } from '@/components/Documents/DocumentPage';
 
 export function AppLayout() {
   const { isOpen, userId, closeProfile } = useProfileStore();
@@ -34,6 +36,10 @@ export function AppLayout() {
     content = <FilesPage />;
   } else if (location.pathname === '/later') {
     content = <LaterPage />;
+  } else if (location.pathname === '/docs') {
+    content = <AllDocumentsPage />;
+  } else if (/^\/c\/\d+\/docs\/\d+$/.test(location.pathname)) {
+    content = <DocumentPage key={location.pathname} />;
   } else {
     content = <MessageArea />;
   }

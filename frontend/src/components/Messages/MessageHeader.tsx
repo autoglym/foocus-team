@@ -25,9 +25,10 @@ interface MessageHeaderProps {
   onToggleFiles?: () => void;
   showFiles?: boolean;
   readOnly?: boolean;
+  view?: 'messages' | 'docs';
 }
 
-export function MessageHeader({ channel, showMembers, onToggleMembers, onTogglePins, showPins, onToggleFiles, showFiles, readOnly }: MessageHeaderProps) {
+export function MessageHeader({ channel, showMembers, onToggleMembers, onTogglePins, showPins, onToggleFiles, showFiles, readOnly, view = 'messages' }: MessageHeaderProps) {
   const navigate = useNavigate();
   const openSidebar = useMobileStore((s) => s.openSidebar);
   const toggleStar = useChannelStore((s) => s.toggleStar);
@@ -215,6 +216,8 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
         showFiles={showFiles}
         onTogglePins={onTogglePins}
         onToggleFiles={onToggleFiles}
+        channelId={channel.isMember ? channel.id : undefined}
+        view={view}
       />
 
       {/* Mobile search overlay */}

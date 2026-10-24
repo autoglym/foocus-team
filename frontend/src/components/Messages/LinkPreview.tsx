@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, ExternalLink, NotebookText } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { getDocument, type DocDetail } from '@/lib/documents';
+import { channelDisplayName } from '@/lib/channelName';
 
 interface Preview {
   url: string;
@@ -36,18 +40,57 @@ function fetchPreview(url: string): Promise<Preview | null> {
   return pending;
 }
 
-/** First previewable URL in a message, skipping links back into this app. */
+const INTERNAL_DOC = /^\/c\/(\d+)\/docs\/(\d+)$/;
+
+/** First previewable URL in a message. Links back into this app only count when they point at a document. */
 export function firstPreviewUrl(content: string): string | null {
   for (const m of content.matchAll(URL_PATTERN)) {
     const url = (m[1] ?? m[2]).replace(/[.,;:!?]+$/, '');
     try {
-      if (new URL(url).origin === window.location.origin) continue;
+      const parsed = new URL(url);
+      if (parsed.origin === window.location.origin && !INTERNAL_DOC.test(parsed.pathname)) continue;
     } catch {
       continue;
     }
     return url;
   }
   return null;
+}
+
+// Cache document lookups per session (null = no access or not found)
+const docCache = new Map<number, Promise<DocDetail | null>>();
+
+function DocLinkCard({ documentId }: { documentId: number }) {
+  const [doc, setDoc] = useState<DocDetail | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let pending = docCache.get(documentId);
+    if (!pending) {
+      pending = getDocument(documentId).catch(() => null);
+      docCache.set(documentId, pending);
+    }
+    pending.then((d) => !cancelled && setDoc(d));
+    return () => { cancelled = true; };
+  }, [documentId]);
+
+  if (!doc) return null;
+  return (
+    <Link
+      to={`/c/${doc.channelId}/docs/${doc.id}`}
+      data-testid="doc-link-preview"
+      className="mt-2 flex max-w-[560px] items-center gap-3 rounded-2xl neu-raised-sm px-3 py-2.5"
+    >
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl neu-inset-sm">
+        <NotebookText className="h-5 w-5 text-slack-btn" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-[14px] font-semibold text-slack-link">{doc.title}</span>
+        <span className="block truncate text-[12px] text-slack-hint">
+          {channelDisplayName(doc.channel, true)} · Edited by {doc.updater.name} {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
+        </span>
+      </span>
+    </Link>
+  );
 }
 
 function GoogleEmbed({ url, kind, id }: { url: string; kind: keyof typeof GOOGLE_KIND; id: string }) {
@@ -128,6 +171,10 @@ function LinkCard({ url }: { url: string }) {
 export function LinkPreview({ content }: { content: string }) {
   const url = firstPreviewUrl(content);
   if (!url) return null;
+  const internal = new URL(url).pathname.match(INTERNAL_DOC);
+  if (internal && new URL(url).origin === window.location.origin) {
+    return <DocLinkCard documentId={Number(internal[2])} />;
+  }
   const google = url.match(GOOGLE_DOC);
   if (google) {
     return <GoogleEmbed url={url} kind={google[1] as keyof typeof GOOGLE_KIND} id={google[2]} />;

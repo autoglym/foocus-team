@@ -285,3 +285,30 @@ body {
 /* iOS safe area — handled per-element (sidebar, headers) to avoid
    conflicting with h-screen / h-dvh on the layout root. */
 
+
+/* BlockNote document editor: transparent on the raised "paper" card, Foocus type */
+.foocus-blocknote .bn-editor {
+  background: transparent;
+  padding-inline: 40px 8px;
+  font-family: var(--font-sans);
+  color: var(--color-slack-primary);
+}
+.foocus-blocknote .bn-editor h1,
+.foocus-blocknote .bn-editor h2,
+.foocus-blocknote .bn-editor h3 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+.foocus-blocknote .bn-container,
+.foocus-blocknote {
+  --bn-colors-editor-background: transparent;
+  --bn-colors-editor-text: var(--color-slack-primary);
+  --bn-font-family: var(--font-sans);
+}
+
+/* Dialogs sit on a dark backdrop, where the neumorphic white highlight would
+   glow; they keep the surface colour with a deep drop shadow instead. */
+@utility neu-dialog {
+  background-color: var(--color-slack-surface);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7), 0 28px 70px -12px rgba(0, 0, 0, 0.5);
+}

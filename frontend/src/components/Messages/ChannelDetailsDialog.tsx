@@ -60,7 +60,7 @@ export function ChannelDetailsDialog({ channel, open, readOnly, onClose }: Chann
         role="dialog"
         aria-modal="true"
         aria-labelledby="channel-details-title"
-        className="w-full max-w-[520px] rounded-[24px] neu-raised"
+        className="w-full max-w-[520px] rounded-[24px] neu-dialog"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 pt-5">
