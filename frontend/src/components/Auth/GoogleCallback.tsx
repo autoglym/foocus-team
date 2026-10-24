@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { startDownloadTokenRefresh } from '@/lib/api';
@@ -7,9 +7,10 @@ import { startDownloadTokenRefresh } from '@/lib/api';
 export function GoogleCallback() {
   const navigate = useNavigate();
   const hydrate = useAuthStore((s) => s.hydrate);
+  // Read the fragment once: effects can run twice (StrictMode) after it has been cleared
+  const [params] = useState(() => new URLSearchParams(window.location.hash.slice(1)));
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.hash.slice(1));
     // Remove the token from the address bar and history right away
     window.history.replaceState(null, '', window.location.pathname);
     const token = params.get('token');
@@ -21,7 +22,7 @@ export function GoogleCallback() {
     } else {
       navigate('/login', { replace: true, state: { googleError: params.get('error') || 'Google sign-in failed' } });
     }
-  }, [hydrate, navigate]);
+  }, [hydrate, navigate, params]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slack-surface text-slack-hint">
