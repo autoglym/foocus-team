@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { searchMessages, type SearchResult } from '@/lib/api';
 import { Avatar } from '@/components/ui/avatar';
 import { renderMessageContent } from '@/lib/renderMessageContent';
+import { channelDisplayName } from '@/lib/channelName';
 
 interface MobileSearchOverlayProps {
   onClose: () => void;
@@ -145,7 +146,7 @@ export function MobileSearchOverlay({ onClose, testIdPrefix = '' }: MobileSearch
                       {result.channel && (
                         <>
                           <span>in</span>
-                          <span className="font-medium">#{result.channel.name}</span>
+                          <span className="font-medium">{channelDisplayName(result.channel, true)}</span>
                         </>
                       )}
                     </div>

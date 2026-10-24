@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMobileStore } from '@/stores/useMobileStore';
 import { ScheduledMessagesTab } from './ScheduledMessagesTab';
 import { cn } from '@/lib/utils';
+import { channelDisplayName } from '@/lib/channelName';
 
 interface BookmarkedMessage {
   messageId: number;
@@ -142,7 +143,7 @@ export function LaterPage() {
                   </div>
                   <div className="flex items-center gap-1 mt-1 text-[12px] text-slack-hint">
                     <Hash className="h-3 w-3" />
-                    <span>{bm.message.channel.name}</span>
+                    <span>{channelDisplayName(bm.message.channel)}</span>
                   </div>
                 </div>
                 <button

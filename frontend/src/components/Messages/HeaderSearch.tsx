@@ -6,6 +6,7 @@ import { searchMessages, type SearchResult } from '@/lib/api';
 import { Avatar } from '@/components/ui/avatar';
 import { renderMessageContent } from '@/lib/renderMessageContent';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { channelDisplayName } from '@/lib/channelName';
 
 interface HeaderSearchProps {
   testIdPrefix?: string;
@@ -132,7 +133,7 @@ export function HeaderSearch({ testIdPrefix = '' }: HeaderSearchProps) {
                         {result.channel && (
                           <>
                             <span>in</span>
-                            <span className="font-medium">#{result.channel.name}</span>
+                            <span className="font-medium">{channelDisplayName(result.channel, true)}</span>
                           </>
                         )}
                       </div>

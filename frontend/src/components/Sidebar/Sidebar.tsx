@@ -26,6 +26,7 @@ import { ChannelItem } from './ChannelItem';
 import { DirectMessageItem } from './DirectMessageItem';
 import { AddChannelDialog } from './AddChannelDialog';
 import { AddTeammatesDialog } from './AddTeammatesDialog';
+import { GroupDMItem } from './GroupDMItem';
 import type { Channel } from '@/lib/types';
 import { getChannels } from '@/lib/api';
 import type { AuthUser } from '@/lib/api';
@@ -36,7 +37,7 @@ import { Wordmark } from '@/components/Brand';
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { channels, directMessages, activeChannelId, activeDMId, startDM, createChannel, joinChannel, fetchChannels } =
+  const { channels, directMessages, activeChannelId, activeDMId, startDM, createChannel, createGroupDM, joinChannel, fetchChannels } =
     useChannelStore();
   const { user, logout } = useAuthStore();
   const { openProfile } = useProfileStore();
@@ -138,6 +139,12 @@ export function Sidebar() {
     navTo(`/d/${u.id}`);
   };
 
+  const handleStartGroup = async (users: AuthUser[]) => {
+    const channelId = await createGroupDM(users.map((u) => u.id));
+    setShowAddTeammates(false);
+    navTo(`/c/${channelId}`);
+  };
+
   // Navigate and close sidebar on mobile
   const navTo = (path: string) => {
     navigate(path);
@@ -145,9 +152,10 @@ export function Sidebar() {
   };
 
   const sortByName = (a: Channel, b: Channel) => a.name.localeCompare(b.name);
-  const starredChannels = channels.filter((ch) => ch.isStarred && ch.isMember).sort(sortByName);
+  const starredChannels = channels.filter((ch) => ch.isStarred && ch.isMember && !ch.isGroupDM).sort(sortByName);
   const publicChannels = channels.filter((ch) => !ch.isPrivate && ch.isMember).sort(sortByName);
-  const privateChannels = channels.filter((ch) => ch.isPrivate && ch.isMember).sort(sortByName);
+  const privateChannels = channels.filter((ch) => ch.isPrivate && ch.isMember && !ch.isGroupDM).sort(sortByName);
+  const groupDMs = channels.filter((ch) => ch.isGroupDM && ch.isMember);
 
   return (
     <div className="flex h-full">
@@ -380,6 +388,15 @@ export function Sidebar() {
                     onClick={() => navTo(`/d/${dm.userId}`)}
                   />
                 ))}
+                {groupDMs.map((group) => (
+                  <GroupDMItem
+                    key={group.id}
+                    channel={group}
+                    currentUserId={user?.id}
+                    isActive={activeChannelId === group.id}
+                    onClick={() => navTo(`/c/${group.id}`)}
+                  />
+                ))}
                 <button
                   onClick={handleOpenAddTeammates}
                   className="flex items-center gap-2 mx-2 w-[calc(100%-16px)] px-4 h-[28px] text-[15px] rounded-[6px] text-left text-white/70 hover:bg-slack-sidebar-hover hover:text-white"
@@ -413,6 +430,7 @@ export function Sidebar() {
         open={showAddTeammates}
         onClose={() => setShowAddTeammates(false)}
         onSelectUser={handleSelectUser}
+        onStartGroup={handleStartGroup}
       />
     </div>
   );

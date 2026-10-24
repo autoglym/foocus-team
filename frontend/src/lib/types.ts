@@ -14,6 +14,8 @@ export interface Channel {
   topic?: string | null;
   description?: string | null;
   isPrivate: boolean;
+  isGroupDM?: boolean;
+  participants?: Array<{ id: number; name: string; avatar: string | null }>;
   memberCount: number;
   unreadCount: number;
   isMember: boolean;

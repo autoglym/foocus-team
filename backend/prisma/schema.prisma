@@ -71,6 +71,8 @@ model Channel {
   topic       String?   @db.VarChar(250)
   description String?   @db.VarChar(1000)
   isPrivate   Boolean   @default(false)
+  // Group DM: a hidden private channel shown under Direct messages
+  isGroupDM   Boolean   @default(false)
   createdBy  Int?
   archivedAt DateTime?
   createdAt  DateTime  @default(now())

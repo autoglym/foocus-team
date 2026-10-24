@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Hash, Lock, Star, MoreVertical, LogOut, Menu, Search } from 'lucide-react';
+import { Hash, Lock, Star, MoreVertical, LogOut, Menu, Search, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getChannelMembers, type ChannelMember } from '@/lib/api';
 import { useChannelStore } from '@/stores/useChannelStore';
@@ -13,6 +13,8 @@ import { HeaderTabs } from './HeaderTabs';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
 import { useMobileStore } from '@/stores/useMobileStore';
 import { ChannelDetailsDialog } from './ChannelDetailsDialog';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { groupDMLabel } from '@/lib/channelName';
 
 interface MessageHeaderProps {
   channel: Channel;
@@ -32,6 +34,7 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
   const leaveChannel = useChannelStore((s) => s.leaveChannel);
   const [showMenu, setShowMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const [previewMembers, setPreviewMembers] = useState<ChannelMember[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -98,8 +101,12 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
             title="Channel details"
             className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 hover:bg-slack-hover"
           >
-            {channel.isPrivate ? <Lock className="h-[16px] w-[16px] text-slack-secondary" /> : <Hash className="h-[16px] w-[16px] text-slack-secondary" />}
-            <span className="font-heading text-[18px] font-bold tracking-tight text-slack-primary">{channel.name}</span>
+            {channel.isGroupDM
+              ? <Users className="h-[16px] w-[16px] text-slack-secondary" />
+              : channel.isPrivate ? <Lock className="h-[16px] w-[16px] text-slack-secondary" /> : <Hash className="h-[16px] w-[16px] text-slack-secondary" />}
+            <span className="max-w-[360px] truncate font-heading text-[18px] font-bold tracking-tight text-slack-primary">
+              {channel.isGroupDM ? groupDMLabel(channel, currentUserId) : channel.name}
+            </span>
           </button>
           {!readOnly && (
             <Button

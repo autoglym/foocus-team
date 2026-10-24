@@ -40,6 +40,7 @@ interface ChannelState {
   fetchChannels: () => Promise<void>;
   fetchDirectMessages: () => Promise<void>;
   createChannel: (name: string, isPrivate?: boolean, description?: string) => Promise<number>;
+  createGroupDM: (userIds: number[]) => Promise<number>;
   setChannelDetails: (channelId: number, details: { topic: string | null; description: string | null }) => void;
   updateChannelDetails: (channelId: number, data: { topic?: string; description?: string }) => Promise<void>;
   joinChannel: (channelId: number) => Promise<void>;
@@ -100,6 +101,8 @@ export const useChannelStore = create<ChannelState>((set, get) => ({
         topic: ch.topic ?? null,
         description: ch.description ?? null,
         isPrivate: ch.isPrivate,
+        isGroupDM: ch.isGroupDM ?? false,
+        participants: ch.participants,
         memberCount: ch._count.members,
         unreadCount: ch.unreadCount,
         isMember: ch.isMember,
@@ -112,6 +115,12 @@ export const useChannelStore = create<ChannelState>((set, get) => ({
     } catch {
       set({ isLoading: false, loadError: 'Failed to load channels.' });
     }
+  },
+
+  createGroupDM: async (userIds) => {
+    const { id } = await api.createGroupDM(userIds);
+    await get().fetchChannels();
+    return id;
   },
 
   setChannelDetails: (channelId, details) => {

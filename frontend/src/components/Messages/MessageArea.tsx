@@ -12,6 +12,7 @@ import { ThreadPanel } from './ThreadPanel';
 import { DMConversation } from './DMConversation';
 import { PinsPanel } from './PinsPanel';
 import { FilesPanel } from './FilesPanel';
+import { channelDisplayName } from '@/lib/channelName';
 
 export function MessageArea() {
   const { activeChannelId, activeDMId, getActiveChannel, getActiveDM } = useChannelStore();
@@ -62,7 +63,7 @@ export function MessageArea() {
 
   // Memoize placeholder to prevent MessageInput re-renders
   const placeholder = useMemo(
-    () => (activeChannel ? `Message #${activeChannel.name}` : ''),
+    () => (activeChannel ? `Message ${channelDisplayName(activeChannel, true)}` : ''),
     [activeChannel?.name]
   );
 
@@ -126,7 +127,7 @@ export function MessageArea() {
           <div className="px-5 pb-4 pt-3 bg-slack-surface border-t border-slack-border">
             <div className="flex items-center justify-center gap-3 rounded-lg border border-slack-border p-4">
               <Hash className="h-4 w-4 text-slack-secondary" />
-              <span className="text-[15px] text-slack-secondary">You're viewing <b>#{activeChannel.name}</b></span>
+              <span className="text-[15px] text-slack-secondary">You're viewing <b>{channelDisplayName(activeChannel, true)}</b></span>
               <button
                 onClick={async () => { await joinChannel(activeChannelId!); await fetchChannels(); }}
                 className="rounded bg-slack-btn px-4 py-1.5 text-sm font-medium text-white hover:bg-slack-btn-hover"

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Hash, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,8 @@ export function AddChannelDialog({
     onBrowse();
   };
 
-  return (
+  // Portal to <body> so the sidebar's transform doesn't trap the fixed overlay
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="w-[520px] rounded-lg bg-white shadow-xl">
         {/* Tabs */}
@@ -252,6 +254,7 @@ export function AddChannelDialog({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

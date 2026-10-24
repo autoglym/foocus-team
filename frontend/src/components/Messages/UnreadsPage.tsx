@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { renderMessageContent } from '@/lib/renderMessageContent';
 import { useNavigate } from 'react-router-dom';
 import { useMobileStore } from '@/stores/useMobileStore';
+import { channelDisplayName } from '@/lib/channelName';
 
 export function UnreadsPage() {
   const [messages, setMessages] = useState<ApiMessage[]>([]);
@@ -81,7 +82,7 @@ export function UnreadsPage() {
                   </div>
                   <div className="flex items-center gap-1 mt-1 text-[12px] text-slack-hint">
                     <Hash className="h-3 w-3" />
-                    <span>{msg.channel.name}</span>
+                    <span>{msg.channel ? channelDisplayName(msg.channel) : null}</span>
                   </div>
                 </div>
               </div>

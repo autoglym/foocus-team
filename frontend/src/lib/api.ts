@@ -174,6 +174,8 @@ export interface ApiChannel {
   topic?: string | null;
   description?: string | null;
   isPrivate: boolean;
+  isGroupDM?: boolean;
+  participants?: Array<{ id: number; name: string; avatar: string | null }>;
   createdAt: string;
   unreadCount: number;
   isMember: boolean;
@@ -207,6 +209,13 @@ export function createChannel(name: string, isPrivate = false, description?: str
   return request<ApiChannel>('/channels', {
     method: 'POST',
     body: JSON.stringify({ name, isPrivate, ...(description ? { description } : {}) }),
+  });
+}
+
+export function createGroupDM(userIds: number[]) {
+  return request<{ id: number; created: boolean }>('/channels/group-dm', {
+    method: 'POST',
+    body: JSON.stringify({ userIds }),
   });
 }
 

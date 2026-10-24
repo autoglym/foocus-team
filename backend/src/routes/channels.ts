@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import crypto from 'crypto';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import prisma from '../db.js';
@@ -107,6 +108,80 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 // GET /channels - List all channels
+// POST /channels/group-dm - Find or create a group DM with 2–8 other people.
+// A group DM is a private channel (isGroupDM) so it gets threads, files,
+// reactions, unreads and membership checks like any other channel.
+const groupDMSchema = z.object({
+  userIds: z.array(z.number().int().positive()).min(2, 'Pick at least two people').max(8, 'A group can have at most 9 people'),
+});
+
+router.post('/group-dm', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    if (req.user!.role === 'GUEST') {
+      res.status(403).json({ error: 'Guests cannot start group conversations' });
+      return;
+    }
+    const parsed = groupDMSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid input' });
+      return;
+    }
+    const me = req.user!.userId;
+    const otherIds = [...new Set(parsed.data.userIds)].filter((id) => id !== me);
+    if (otherIds.length < 2) {
+      res.status(400).json({ error: 'Pick at least two people' });
+      return;
+    }
+
+    const activeUsers = await prisma.user.count({ where: { id: { in: otherIds }, deactivatedAt: null } });
+    if (activeUsers !== otherIds.length) {
+      res.status(400).json({ error: 'One or more users were not found' });
+      return;
+    }
+
+    // Reuse an existing group DM with exactly the same people
+    const memberIds = [me, ...otherIds].sort((a, b) => a - b);
+    const candidates = await prisma.channel.findMany({
+      where: { isGroupDM: true, archivedAt: null, members: { some: { userId: me } } },
+      select: { id: true, members: { select: { userId: true } } },
+    });
+    const existing = candidates.find((c) => {
+      const ids = c.members.map((m) => m.userId).sort((a, b) => a - b);
+      return ids.length === memberIds.length && ids.every((id, i) => id === memberIds[i]);
+    });
+    if (existing) {
+      res.json({ id: existing.id, created: false });
+      return;
+    }
+
+    const channel = await prisma.channel.create({
+      data: {
+        name: `gdm-${crypto.randomUUID()}`,
+        isPrivate: true,
+        isGroupDM: true,
+        createdBy: me,
+        members: {
+          create: memberIds.map((userId) => ({ userId, role: userId === me ? 'OWNER' as const : 'MEMBER' as const })),
+        },
+        reads: {
+          create: memberIds.map((userId) => ({ userId, lastReadMessageId: null })),
+        },
+      },
+      select: { id: true },
+    });
+
+    const io = getIO();
+    for (const userId of memberIds) {
+      io?.to(`user:${userId}`).emit('channel:joined', { channelId: channel.id });
+    }
+
+    res.status(201).json({ id: channel.id, created: true });
+  } catch (error) {
+    logError('Create group DM error', error);
+    res.status(500).json({ error: 'Failed to start group conversation' });
+  }
+});
+
 // PATCH /channels/:id - Set topic and/or description (any non-guest member)
 router.patch('/:id', authMiddleware, requireChannelMembership, async (req: AuthRequest, res: Response) => {
   try {
@@ -198,10 +273,27 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
     const memberSet = new Set(memberships.map(m => m.channelId));
     const unreadMap = new Map(unreadRows.map(r => [r.channelId, Number(r.unreadCount)]));
 
+    // Group DMs are named after their participants, so send those along
+    const groupDMIds = channels.filter((c) => c.isGroupDM && memberSet.has(c.id)).map((c) => c.id);
+    const groupMembers = groupDMIds.length > 0
+      ? await prisma.channelMember.findMany({
+          where: { channelId: { in: groupDMIds } },
+          select: { channelId: true, user: { select: USER_SELECT_BASIC } },
+          orderBy: { joinedAt: 'asc' },
+        })
+      : [];
+    const participantsByChannel = new Map<number, Array<{ id: number; name: string; avatar: string | null }>>();
+    for (const m of groupMembers) {
+      const list = participantsByChannel.get(m.channelId) ?? [];
+      list.push(m.user);
+      participantsByChannel.set(m.channelId, list);
+    }
+
     const channelsWithUnread = channels.map((channel) => ({
       ...channel,
       unreadCount: memberSet.has(channel.id) ? (unreadMap.get(channel.id) || 0) : 0,
       isMember: memberSet.has(channel.id),
+      ...(channel.isGroupDM ? { participants: participantsByChannel.get(channel.id) ?? [] } : {}),
     }));
 
     res.json(channelsWithUnread);

@@ -4,6 +4,7 @@ import { Hash, Lock, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChannelStore } from '@/stores/useChannelStore';
 import type { Channel } from '@/lib/types';
+import { channelDisplayName } from '@/lib/channelName';
 
 interface ChannelDetailsDialogProps {
   channel: Channel;
@@ -65,7 +66,7 @@ export function ChannelDetailsDialog({ channel, open, readOnly, onClose }: Chann
         <div className="flex items-center justify-between px-6 pt-5">
           <h2 id="channel-details-title" className="flex items-center gap-1.5 font-heading text-[20px] font-bold tracking-tight text-slack-primary">
             {channel.isPrivate ? <Lock className="h-[18px] w-[18px] text-slack-secondary" /> : <Hash className="h-[18px] w-[18px] text-slack-secondary" />}
-            {channel.name}
+            {channelDisplayName(channel)}
           </h2>
           <Button variant="toolbar" size="icon-sm" onClick={onClose} aria-label="Close">
             <X className="h-4 w-4" />

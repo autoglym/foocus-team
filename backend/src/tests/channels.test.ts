@@ -153,6 +153,79 @@ describe('Channels', () => {
     });
   });
 
+  describe('POST /channels/group-dm', () => {
+    const register = async (n: number) => {
+      const res = await request(app).post('/auth/register').send({
+        email: `gdm-${n}@example.com`, password: TEST_PASSWORD, name: `Group User ${n}`,
+      });
+      return { id: res.body.user.id as number, token: res.body.token as string };
+    };
+
+    it('should create a private group DM with all participants', async () => {
+      const [a, b] = [await register(1), await register(2)];
+
+      const res = await request(app)
+        .post('/channels/group-dm')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ userIds: [a.id, b.id] });
+
+      expect(res.status).toBe(201);
+      const channel = await prisma.channel.findUnique({
+        where: { id: res.body.id },
+        include: { members: true },
+      });
+      expect(channel?.isGroupDM).toBe(true);
+      expect(channel?.isPrivate).toBe(true);
+      expect(channel?.members.map((m) => m.userId).sort()).toEqual([userId, a.id, b.id].sort());
+
+      const list = await request(app).get('/channels').set('Authorization', `Bearer ${a.token}`);
+      const gdm = list.body.find((c: any) => c.id === res.body.id);
+      expect(gdm.isGroupDM).toBe(true);
+      expect(gdm.participants.map((p: any) => p.id).sort()).toEqual([userId, a.id, b.id].sort());
+    });
+
+    it('should reuse the group DM for the same set of people', async () => {
+      const [a, b] = [await register(3), await register(4)];
+      const first = await request(app)
+        .post('/channels/group-dm')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ userIds: [a.id, b.id] });
+      const second = await request(app)
+        .post('/channels/group-dm')
+        .set('Authorization', `Bearer ${a.token}`)
+        .send({ userIds: [b.id, userId] });
+
+      expect(second.status).toBe(200);
+      expect(second.body.id).toBe(first.body.id);
+    });
+
+    it('should require at least two other people', async () => {
+      const a = await register(5);
+      const res = await request(app)
+        .post('/channels/group-dm')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ userIds: [a.id, userId] });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should hide the group DM from people outside it', async () => {
+      const [a, b, outsider] = [await register(6), await register(7), await register(8)];
+      const res = await request(app)
+        .post('/channels/group-dm')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ userIds: [a.id, b.id] });
+
+      const list = await request(app).get('/channels').set('Authorization', `Bearer ${outsider.token}`);
+      expect(list.body.find((c: any) => c.id === res.body.id)).toBeUndefined();
+
+      const messages = await request(app)
+        .get(`/channels/${res.body.id}/messages`)
+        .set('Authorization', `Bearer ${outsider.token}`);
+      expect(messages.status).toBe(403);
+    });
+  });
+
   describe('GET /channels', () => {
     beforeEach(async () => {
       await request(app)
