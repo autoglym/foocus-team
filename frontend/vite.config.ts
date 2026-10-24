@@ -39,6 +39,7 @@ export default defineConfig({
       '/documents': { target: 'http://localhost:3000', changeOrigin: true },
       '/folders': { target: 'http://localhost:3000', changeOrigin: true },
       '/library': { target: 'http://localhost:3000', changeOrigin: true },
+      '/kpi': { target: 'http://localhost:3000', changeOrigin: true },
       '/dms': {
         target: 'http://localhost:3000',
         changeOrigin: true,

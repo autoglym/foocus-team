@@ -81,6 +81,10 @@
   --color-slack-file-image: #346F91;
   --color-slack-file-pdf: #A33843;
   --color-slack-file-archive: #B08A2E;
+
+  /* Data marks (charts): Foocus cerulean, saturated enough to read as colour
+     on the surface (validated: chroma, lightness, 3:1 contrast vs #ECEAE4) */
+  --color-chart-1: #2F7AB0;
 }
 
 /* ──────────────────────────────────────────────────────────

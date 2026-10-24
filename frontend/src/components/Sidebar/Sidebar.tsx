@@ -15,6 +15,7 @@ import {
   Shield,
   Inbox,
   NotebookText,
+  LayoutDashboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChannelStore } from '@/stores/useChannelStore';
@@ -46,7 +47,7 @@ export function Sidebar() {
   const closeSidebar = useMobileStore((s) => s.closeSidebar);
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [dmsExpanded, setDmsExpanded] = useState(true);
-  const activeNav = location.pathname === '/unreads' ? 'unreads' : location.pathname === '/files' ? 'files' : location.pathname === '/docs' ? 'docs' : location.pathname === '/later' ? 'later' : location.pathname === '/admin' ? 'admin' : 'dms';
+  const activeNav = location.pathname === '/unreads' ? 'unreads' : location.pathname === '/files' ? 'files' : location.pathname === '/docs' ? 'docs' : location.pathname === '/later' ? 'later' : location.pathname === '/admin' ? 'admin' : location.pathname === '/dashboard' ? 'dashboard' : 'dms';
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showAddChannelDialog, setShowAddChannelDialog] = useState(false);
   const [browseChannels, setBrowseChannels] = useState<Channel[]>([]);
@@ -216,6 +217,23 @@ export function Sidebar() {
             )}
           </button>
         ))}
+
+        {/* Dashboard - commercial KPIs, only for admins and owner */}
+        {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
+          <button
+            data-testid="nav-item-dashboard"
+            onClick={() => navTo('/dashboard')}
+            className={cn(
+              'relative flex flex-col h-[64px] w-[54px] items-center justify-center gap-1 rounded-2xl transition-all',
+              activeNav === 'dashboard'
+                ? 'neu-navy-raised bg-slack-sidebar text-white'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'
+            )}
+          >
+            <LayoutDashboard className="h-5 w-5" />
+            <span className="text-[11px] font-medium">Dashboard</span>
+          </button>
+        )}
 
         {/* Admin Nav Item - only visible to admins and owner */}
         {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (

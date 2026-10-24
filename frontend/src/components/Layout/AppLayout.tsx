@@ -11,6 +11,7 @@ import { FilesPage } from '@/components/Messages/FilesPage';
 import { UnreadsPage } from '@/components/Messages/UnreadsPage';
 import { LaterPage } from '@/components/Messages/LaterPage';
 import { AllDocumentsPage } from '@/components/Documents/AllDocumentsPage';
+import { DashboardPage } from '@/components/Dashboard/DashboardPage';
 import { DocumentPage } from '@/components/Documents/DocumentPage';
 
 export function AppLayout() {
@@ -36,6 +37,8 @@ export function AppLayout() {
     content = <FilesPage />;
   } else if (location.pathname === '/later') {
     content = <LaterPage />;
+  } else if (location.pathname === '/dashboard') {
+    content = <DashboardPage />;
   } else if (location.pathname === '/docs') {
     content = <AllDocumentsPage />;
   } else if (/^\/c\/\d+\/docs\/\d+$/.test(location.pathname)) {

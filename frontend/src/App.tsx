@@ -586,6 +586,7 @@ function App() {
           <Route path="c/:channelId/docs" element={<RouteSync />} />
           <Route path="c/:channelId/docs/:documentId" element={<RouteSync />} />
           <Route path="docs" element={<FileRouteSync />} />
+          <Route path="dashboard" element={<AdminGuard><AdminRouteSync /></AdminGuard>} />
           <Route path="d/:userId" element={<RouteSync />} />
           <Route path="files" element={<FileRouteSync />} />
           <Route path="unreads" element={<UnreadsRouteSync />} />
