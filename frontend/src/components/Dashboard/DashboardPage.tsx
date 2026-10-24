@@ -109,6 +109,11 @@ export function DashboardPage() {
                   Website · Google Analytics, last 30 days
                 </h2>
                 {data.ga4.error && <p className="mb-3 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">{data.ga4.error}</p>}
+                {data.ga4.ok && data.ga4.metrics?.every((m) => m.current === 0) && (
+                  <p className="mb-3 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">
+                    Google Analytics has received no visits from the website in the last 30 days. The tracking code on the site may be missing or blocked by a consent banner.
+                  </p>
+                )}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
                   {data.ga4.metrics?.map((g, i) => (
                     <MetricTile key={g.key} metric={ga4ToMetric(g, i)} onChanged={load} />
