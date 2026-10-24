@@ -55,7 +55,9 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   'typing:stop': { max: 60, windowMs: 60_000 },
   'dm:typing:start': { max: 60, windowMs: 60_000 },
   'dm:typing:stop': { max: 60, windowMs: 60_000 },
-  'join:channel': { max: 20, windowMs: 60_000 },
+  // Clients join every channel they're in on each (re)connect; 20/min silently dropped
+  // rooms for users with many channels or a few reloads in a row
+  'join:channel': { max: 300, windowMs: 60_000 },
   'dm:join': { max: 20, windowMs: 60_000 },
   'huddle:invite': { max: 10, windowMs: 60_000 },
   'huddle:invite:accept': { max: 10, windowMs: 60_000 },

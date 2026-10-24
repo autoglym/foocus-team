@@ -513,8 +513,15 @@ function AppShell() {
     const joinChannels = () => {
       for (const ch of channels) {
         if (ch.isMember && !joinedChannelsRef.current.has(ch.id)) {
-          socket.emit('join:channel', ch.id);
           joinedChannelsRef.current.add(ch.id);
+          socket.emit('join:channel', ch.id, (ok: boolean) => {
+            // Rejected (e.g. rate limited): forget it and try again shortly,
+            // otherwise this channel would get no live updates until a reconnect
+            if (!ok) {
+              joinedChannelsRef.current.delete(ch.id);
+              setTimeout(joinChannels, 5_000);
+            }
+          });
         }
       }
     };
@@ -576,6 +583,9 @@ function App() {
         >
           <Route index element={<DefaultRedirect />} />
           <Route path="c/:channelId" element={<RouteSync />} />
+          <Route path="c/:channelId/docs" element={<RouteSync />} />
+          <Route path="c/:channelId/docs/:documentId" element={<RouteSync />} />
+          <Route path="docs" element={<FileRouteSync />} />
           <Route path="d/:userId" element={<RouteSync />} />
           <Route path="files" element={<FileRouteSync />} />
           <Route path="unreads" element={<UnreadsRouteSync />} />
