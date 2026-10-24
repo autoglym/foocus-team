@@ -107,6 +107,24 @@ export function MessageList({ channelId, onOpenThread, readOnly }: MessageListPr
     return () => clearTimeout(timer);
   }, [highlightedId]);
 
+  // Stay pinned to the bottom when content grows after render (link previews,
+  // images, embeds) — but only if the user was already at the bottom.
+  const hasMessages = messages.length > 0;
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const stick = () => {
+      if (isAtBottom.current) container.scrollTop = container.scrollHeight;
+    };
+    const observer = new MutationObserver(stick);
+    observer.observe(container, { childList: true, subtree: true });
+    container.addEventListener('load', stick, true);
+    return () => {
+      observer.disconnect();
+      container.removeEventListener('load', stick, true);
+    };
+  }, [channelId, hasMessages]);
+
   // Auto-scroll to bottom on new messages (only when not targeting a specific message)
   useEffect(() => {
     if (scrollToMessageId) return;

@@ -24,6 +24,7 @@ import unreadRoutes from './routes/unreads.js';
 import scheduledMessageRoutes from './routes/scheduled-messages.js';
 import adminRoutes from './routes/admin.js';
 import pushRoutes from './routes/push.js';
+import unfurlRoutes from './routes/unfurl.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authMiddleware } from './middleware/auth.js';
 import { JWT_SECRET } from './config.js';
@@ -38,12 +39,17 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      'img-src': ["'self'", 'blob:', ...(process.env.NODE_ENV !== 'production' ? ['https://randomuser.me'] : []), ...(signedUrlSource ? [signedUrlSource] : [])],
+      // https: — link preview images come from arbitrary public sites
+      'img-src': ["'self'", 'blob:', 'https:', ...(signedUrlSource ? [signedUrlSource] : [])],
+      // Embedded Google Slides / Docs / Sheets in link previews
+      'frame-src': ['https://docs.google.com'],
       'connect-src': ["'self'", 'wss:', 'ws:'],
       'media-src': ["'self'", 'blob:', ...(signedUrlSource ? [signedUrlSource] : [])],
     },
   },
-  crossOriginEmbedderPolicy: { policy: 'credentialless' },
+  // No COEP: nothing needs cross-origin isolation, and it would stop embedded
+  // Google Slides/Docs from using the viewer's Google login.
+  crossOriginEmbedderPolicy: false,
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
 }));
 const corsOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173');
@@ -136,6 +142,7 @@ app.use('/unreads', apiLimiter, unreadRoutes);
 app.use('/messages', apiLimiter, scheduledMessageRoutes);
 app.use('/admin', apiLimiter, adminRoutes);
 app.use('/push', apiLimiter, pushRoutes);
+app.use('/unfurl', apiLimiter, unfurlRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

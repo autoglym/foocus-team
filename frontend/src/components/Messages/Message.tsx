@@ -22,6 +22,7 @@ import { FilePreviewModal } from './FilePreviewModal';
 import { MessageToolbar } from './MessageToolbar';
 import { MessageActionsMenu } from './MessageActionsMenu';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
+import { LinkPreview } from './LinkPreview';
 
 interface MessageProps {
   message: MessageType;
@@ -209,7 +210,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
               <div
                 className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
                 style={{
-                  background: `linear-gradient(to top, ${message.isPinned ? '#FEF9ED' : '#ffffff'}, transparent)`,
+                  background: `linear-gradient(to top, ${message.isPinned ? 'var(--color-slack-pinned)' : 'var(--color-slack-surface)'}, transparent)`,
                 }}
               />
             )}
@@ -232,6 +233,8 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
             )}
           </div>
         )}
+
+        {!isEditing && <LinkPreview content={message.content} />}
 
         {/* File Attachments */}
         {message.files && message.files.length > 0 && (

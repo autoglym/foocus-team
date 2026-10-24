@@ -38,6 +38,7 @@ import { renderMessageContent } from '@/lib/renderMessageContent';
 import { markDMUnread, pinDM, unpinDM, getPinnedDMs, getFileUrl, getAuthFileUrl } from '@/lib/api';
 import { useMobileStore } from '@/stores/useMobileStore';
 import type { DMMessage } from '@/stores/useDMStore';
+import { LinkPreview } from './LinkPreview';
 
 interface DMConversationProps {
   userId: number;
@@ -459,6 +460,7 @@ export function DMConversation({ userId, userName, userAvatar }: DMConversationP
                               {!showAvatar && msg.editedAt && (
                                 <span className="ml-1 text-[12px] text-slack-secondary">(edited)</span>
                               )}
+                              <LinkPreview content={msg.content} />
                             </div>
                           )}
                           {msg.files && msg.files.length > 0 && (

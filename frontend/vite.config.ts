@@ -35,6 +35,7 @@ export default defineConfig({
         },
       },
       '/users': { target: 'http://localhost:3000', changeOrigin: true },
+      '/unfurl': { target: 'http://localhost:3000', changeOrigin: true },
       '/dms': {
         target: 'http://localhost:3000',
         changeOrigin: true,
