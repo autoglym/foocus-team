@@ -46,6 +46,22 @@ Du blir bedt om å skrive passord to ganger (det vises ikke). Skriptet lager deg
 2. Gå til **Admin → Invites** og lag en invitasjonslenke.
 3. Send lenken til teamet. De registrerer seg selv via lenken.
 
+## 5. Logg inn med Google (valgfritt)
+
+1. Gå til <https://console.cloud.google.com>, lag (eller velg) et prosjekt.
+2. **APIs & Services → OAuth consent screen**: velg **Internal** hvis dere bruker Google Workspace (da kan bare folk i foocus.ai logge inn), fyll inn appnavn «Foocus Team» og kontakt-e-post.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
+   - Application type: **Web application**
+   - Authorized redirect URIs: `https://foocus-team.onrender.com/auth/google/callback`
+4. Kopier **Client ID** og **Client secret**.
+5. På Render → foocus-team → **Environment**, legg inn:
+   - `APP_URL` = `https://foocus-team.onrender.com`
+   - `GOOGLE_CLIENT_ID` og `GOOGLE_CLIENT_SECRET` fra steg 4
+   - `GOOGLE_ALLOWED_DOMAINS` = `foocus.ai` (står allerede)
+6. **Save, rebuild, and deploy**. Knappen «Continue with Google» vises da på innloggingssiden.
+
+Hvem slipper inn: alle som allerede har en konto med samme e-post, og nye brukere med e-post på domenene i `GOOGLE_ALLOWED_DOMAINS` (de får konto automatisk og havner i #general). Andre trenger fortsatt en invitasjonslenke.
+
 ## Oppdateringer
 
 Hver `git push` til `main` i ditt repo bygger og publiserer appen automatisk. Nye databasemigreringer kjøres ved oppstart.

@@ -52,6 +52,40 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref();
 
+// Auto-join default channels — guests get NO auto-join (admin assigns channels).
+// Shared with Google sign-in, which can create users too.
+export async function joinDefaultChannels(userId: number, role: string): Promise<void> {
+  const channelsToJoin = role === 'GUEST' ? [] : ['general', 'random'];
+  for (const channelName of channelsToJoin) {
+    try {
+      let channel = await prisma.channel.findFirst({
+        where: { name: channelName, isPrivate: false, archivedAt: null },
+      });
+      if (!channel) {
+        try {
+          channel = await prisma.channel.create({
+            data: { name: channelName, isPrivate: false },
+          });
+        } catch {
+          // Race condition: another request created it concurrently
+          channel = await prisma.channel.findFirst({
+            where: { name: channelName, isPrivate: false, archivedAt: null },
+          });
+        }
+      }
+      if (channel) {
+        await prisma.channelMember.create({
+          data: { userId, channelId: channel.id },
+        }).catch(() => {
+          // Ignore if already a member
+        });
+      }
+    } catch {
+      // Non-critical: don't fail registration if auto-join fails
+    }
+  }
+}
+
 // POST /auth/register
 router.post('/register', async (req: Request, res: Response) => {
   try {
@@ -131,36 +165,7 @@ router.post('/register', async (req: Request, res: Response) => {
       });
     });
 
-    // Auto-join default channels — guests get NO auto-join (admin assigns channels)
-    const channelsToJoin = user.role === 'GUEST' ? [] : ['general', 'random'];
-    for (const channelName of channelsToJoin) {
-      try {
-        let channel = await prisma.channel.findFirst({
-          where: { name: channelName, isPrivate: false, archivedAt: null },
-        });
-        if (!channel) {
-          try {
-            channel = await prisma.channel.create({
-              data: { name: channelName, isPrivate: false },
-            });
-          } catch {
-            // Race condition: another request created it concurrently
-            channel = await prisma.channel.findFirst({
-              where: { name: channelName, isPrivate: false, archivedAt: null },
-            });
-          }
-        }
-        if (channel) {
-          await prisma.channelMember.create({
-            data: { userId: user.id, channelId: channel.id },
-          }).catch(() => {
-            // Ignore if already a member
-          });
-        }
-      } catch {
-        // Non-critical: don't fail registration if auto-join fails
-      }
-    }
+    await joinDefaultChannels(user.id, user.role);
 
     const token = jwt.sign({ userId: user.id, tokenVersion: 0 }, JWT_SECRET, {
       algorithm: 'HS256',

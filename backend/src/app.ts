@@ -25,6 +25,7 @@ import scheduledMessageRoutes from './routes/scheduled-messages.js';
 import adminRoutes from './routes/admin.js';
 import pushRoutes from './routes/push.js';
 import unfurlRoutes from './routes/unfurl.js';
+import googleAuthRoutes from './routes/googleAuth.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authMiddleware } from './middleware/auth.js';
 import { JWT_SECRET } from './config.js';
@@ -126,6 +127,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Routes
+app.use('/auth/google', authLimiter, googleAuthRoutes);
 app.use('/auth', authLimiter, authRoutes);
 app.use('/channels', apiLimiter, channelRoutes);
 app.use('/channels', apiLimiter, messageRoutes);

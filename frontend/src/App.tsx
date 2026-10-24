@@ -14,6 +14,7 @@ import { HuddleIncomingCall } from '@/components/Huddle/HuddleIncomingCall';
 import { AppLayout } from '@/components/Layout/AppLayout';
 import { LoginPage } from '@/components/Auth/LoginPage';
 import { RegisterPage } from '@/components/Auth/RegisterPage';
+import { GoogleCallback } from '@/components/Auth/GoogleCallback';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isHydrating } = useAuthStore();
@@ -556,6 +557,7 @@ function App() {
             </PublicRoute>
           }
         />
+        <Route path="/login/google" element={<GoogleCallback />} />
         <Route
           path="/register"
           element={
