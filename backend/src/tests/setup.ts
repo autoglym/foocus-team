@@ -15,6 +15,7 @@ beforeAll(async () => {
   await prisma.bookmark.deleteMany();
   await prisma.scheduledMessage.deleteMany();
   await prisma.reaction.deleteMany();
+  await prisma.linkedinProfile.deleteMany();
   await prisma.linkedinDailyMetric.deleteMany();
   await prisma.kpiValue.deleteMany();
   await prisma.kpiMetric.deleteMany();

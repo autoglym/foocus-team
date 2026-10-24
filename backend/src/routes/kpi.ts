@@ -13,7 +13,7 @@ import {
 } from '../services/crmKpi.js';
 import { isGa4Configured, fetchGa4, type Ga4Result } from '../services/ga4.js';
 import multer from 'multer';
-import { importLinkedinContent, linkedinSummary, LinkedinImportError } from '../services/linkedinImport.js';
+import { importLinkedinFile, linkedinSummary, linkedinProfilesSummary, LinkedinImportError } from '../services/linkedinImport.js';
 
 // Commercial dashboard — owners and admins only.
 const router = Router();
@@ -126,7 +126,7 @@ router.get('/dashboard', async (_req: AuthRequest, res: Response) => {
       }
     }
 
-    const linkedin = await linkedinSummary();
+    const linkedin = { ...(await linkedinSummary()), profiles: await linkedinProfilesSummary() };
 
     res.json({ crm, ga4, linkedin, metrics: result });
   } catch (error) {
@@ -146,7 +146,7 @@ function thinDaily<T extends { capturedAt: Date }>(points: T[]): T[] {
 // Kept in memory only; LinkedIn exports are small spreadsheets
 const linkedinUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
-// POST /kpi/linkedin/import - LinkedIn page Analytics → Content export (.xls/.xlsx/.csv)
+// POST /kpi/linkedin/import - LinkedIn export: company page Content export or a personal profile export
 router.post('/linkedin/import', (req, res, next) => {
   linkedinUpload.single('file')(req, res, (err: unknown) => {
     if (err) return void res.status(400).json({ error: 'The file is too large or could not be uploaded' });
@@ -155,7 +155,11 @@ router.post('/linkedin/import', (req, res, next) => {
 }, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) return void res.status(400).json({ error: 'Choose a LinkedIn export file' });
-    const result = await importLinkedinContent(req.file.buffer);
+    // Multer decodes multipart file names as latin1; LinkedIn names can contain æøå
+    const raw = req.file.originalname;
+    const decoded = Buffer.from(raw, 'latin1').toString('utf8');
+    const filename = decoded.includes('\uFFFD') ? raw : decoded;
+    const result = await importLinkedinFile(req.file.buffer, filename);
     res.json(result);
   } catch (error) {
     if (error instanceof LinkedinImportError) return void res.status(400).json({ error: error.message });

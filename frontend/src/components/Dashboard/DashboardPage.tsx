@@ -25,14 +25,24 @@ interface Metric {
 interface StageRow { stage: string; deals: number; total: number; weighted: number }
 interface Ga4Metric { key: string; label: string; current: number; previous: number; history: Array<{ date: string; value: number }> }
 interface LiTotals { impressions: number; clicks: number; reactions: number; comments: number; reposts: number; engagementRate: number | null }
-type LinkedinSummary =
+interface LinkedinProfileSummary {
+  name: string; importedAt: string; followers: number | null; followersAt: string | null;
+  firstDate: string | null; latestDate: string | null; daysCovered: number;
+  last30: { impressions: number; engagements: number; newFollowers: number };
+  previous30: { impressions: number; engagements: number; newFollowers: number } | null;
+  daily: Array<{ date: string; impressions: number }>;
+  topPosts: Array<{ url: string; title: string; publishedAt: string | null; impressions: number | null; engagements: number | null }>;
+  demographics: Record<string, Array<{ value: string; percentage: string }>>;
+}
+type LinkedinSummary = { profiles: LinkedinProfileSummary[] } & (
   | { hasData: false }
   | {
       hasData: true; lastImportAt: string; latestDate: string; firstDate: string;
       last30: LiTotals; previous30: LiTotals;
       daily: Array<{ date: string; impressions: number }>;
       monthly: Array<LiTotals & { month: string }>;
-    };
+    }
+);
 interface Dashboard {
   linkedin: LinkedinSummary;
   crm: { configured: boolean; ok: boolean; error?: string; fetchedAt?: string; pipelineByStage?: StageRow[] };
@@ -561,9 +571,12 @@ function LinkedinSection({ summary, onImported }: { summary: LinkedinSummary; on
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || 'Import failed');
+      const range = body.from && body.to ? ` (${format(new Date(body.from), 'd MMM yyyy')} – ${format(new Date(body.to), 'd MMM yyyy')})` : '';
       setMessage({
         tone: 'ok',
-        text: `Imported ${body.days} days (${format(new Date(body.from), 'd MMM yyyy')} – ${format(new Date(body.to), 'd MMM yyyy')}).`,
+        text: body.kind === 'profile'
+          ? `Imported ${body.name}’s profile: ${body.days} days${range}, ${body.posts} posts.`
+          : `Imported the company page: ${body.days} days${range}.`,
       });
       await onImported();
     } catch (err) {
@@ -609,6 +622,8 @@ function LinkedinSection({ summary, onImported }: { summary: LinkedinSummary; on
         </>
       )}
 
+      {summary.profiles.map((p) => <ProfileCard key={p.name} profile={p} onChanged={onImported} />)}
+
       <div
         className={cn(
           'mt-5 flex flex-wrap items-center gap-4 rounded-[24px] neu-inset px-5 py-4 transition-shadow',
@@ -626,11 +641,11 @@ function LinkedinSection({ summary, onImported }: { summary: LinkedinSummary; on
       >
         <div className="min-w-0 flex-1 text-[13px] text-slack-secondary">
           <p className="font-medium text-slack-primary">
-            {summary.hasData ? 'Update with a new export' : 'Import LinkedIn analytics'}
+            {summary.hasData || summary.profiles.length > 0 ? 'Update with a new export' : 'Import LinkedIn analytics'}
           </p>
           <p>
-            On the Foocus LinkedIn page, open <b>Analytics → Content</b>, choose <b>Export</b> (last 365 days),
-            then drop the file here. Re-importing replaces the same days.
+            Company page: <b>Analytics → Content → Export</b>. Personal profile: <b>Analytics → Post impressions → Export</b>
+            (keep LinkedIn’s file name). Choose <b>past 365 days</b>, then drop the file here. Re-importing replaces the same days.
             {summary.hasData && <> Last import {formatDistanceToNow(new Date(summary.lastImportAt), { addSuffix: true })}.</>}
           </p>
           {message && (
@@ -674,6 +689,105 @@ function MonthlyImpressions({ months }: { months: Array<LiTotals & { month: stri
             <span className="text-[11px] text-slack-hint">{format(new Date(`${m.month}-01`), 'MMM')}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+const DEMOGRAPHIC_ORDER = ['Job title', 'Seniority', 'Industry', 'Company size', 'Location', 'Company'];
+
+function ProfileCard({ profile: p, onChanged }: { profile: LinkedinProfileSummary; onChanged: () => Promise<void> }) {
+  // A short export (e.g. LinkedIn's default 7 days) can't fill "last 30 days" honestly
+  const fullMonth = p.daysCovered >= 30;
+  const period = fullMonth
+    ? 'last 30 days'
+    : p.firstDate && p.latestDate
+      ? `${format(new Date(p.firstDate), 'd MMM')} – ${format(new Date(p.latestDate), 'd MMM yyyy')}`
+      : 'imported period';
+  const at = p.latestDate ?? p.importedAt;
+  const tiles: Metric[] = [
+    {
+      id: -200, key: `${p.name}-followers`, label: 'Followers', unit: 'count', source: 'linkedin',
+      current: p.followers, updatedAt: p.followersAt,
+      previous: p.followers !== null ? { value: p.followers - p.last30.newFollowers, capturedAt: at } : null,
+      compareLabel: `new, ${period}`, trackingSince: p.firstDate, history: [],
+    },
+    {
+      id: -201, key: `${p.name}-impressions`, label: `Impressions, ${period}`, unit: 'count', source: 'linkedin',
+      current: p.last30.impressions, updatedAt: at,
+      previous: fullMonth && p.previous30 ? { value: p.previous30.impressions, capturedAt: at } : null,
+      compareLabel: 'vs previous 30 days', trackingSince: p.firstDate,
+      history: p.daily.map((d, i) => ({ id: i, value: d.impressions, capturedAt: d.date })),
+    },
+    {
+      id: -202, key: `${p.name}-engagements`, label: `Engagements, ${period}`, unit: 'count', source: 'linkedin',
+      current: p.last30.engagements, updatedAt: at,
+      previous: fullMonth && p.previous30 ? { value: p.previous30.engagements, capturedAt: at } : null,
+      compareLabel: 'vs previous 30 days', trackingSince: p.firstDate, history: [],
+    },
+  ];
+  const categories = DEMOGRAPHIC_ORDER.filter((c) => p.demographics[c]?.length).concat(
+    Object.keys(p.demographics).filter((c) => !DEMOGRAPHIC_ORDER.includes(c)),
+  );
+
+  return (
+    <div className="mt-6" data-testid="linkedin-profile">
+      <h3 className="mb-3 text-[13px] font-medium text-slack-secondary">
+        {p.name} · personal profile{!fullMonth && <> · only {p.daysCovered} days imported — export “past 365 days” for history</>}
+      </h3>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-5">
+        {tiles.map((t) => <MetricTile key={t.key} metric={t} onChanged={onChanged} />)}
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <section className="rounded-[24px] neu-raised px-6 py-5" aria-label={`${p.name}: top posts`}>
+          <h4 className="font-heading text-[16px] font-bold text-slack-primary">Top posts</h4>
+          <p className="mb-3 text-[12px] text-slack-hint">Impressions and engagements in the imported period</p>
+          {p.topPosts.length === 0 ? (
+            <p className="text-[13px] text-slack-hint">No posts in this export.</p>
+          ) : (
+            <ol className="space-y-2.5">
+              {p.topPosts.map((post) => (
+                <li key={post.url} className="flex items-start justify-between gap-3 text-[13px]">
+                  <span className="min-w-0">
+                    <a href={post.url} target="_blank" rel="noopener noreferrer" className="block truncate font-medium text-slack-link hover:underline">
+                      {post.title}
+                    </a>
+                    {post.publishedAt && <span className="text-[11px] text-slack-hint">Posted {format(new Date(post.publishedAt), 'd MMM yyyy')}</span>}
+                  </span>
+                  <span className="flex-shrink-0 text-right tabular-nums text-slack-secondary">
+                    {num.format(post.impressions ?? 0)} <span className="text-[11px] text-slack-hint">views</span>
+                    {post.engagements ? <> · {num.format(post.engagements)} <span className="text-[11px] text-slack-hint">eng.</span></> : null}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+
+        <section className="rounded-[24px] neu-raised px-6 py-5" aria-label={`${p.name}: audience`}>
+          <h4 className="font-heading text-[16px] font-bold text-slack-primary">Who you reach</h4>
+          <p className="mb-3 text-[12px] text-slack-hint">Top audience by category, as reported by LinkedIn</p>
+          {categories.length === 0 ? (
+            <p className="text-[13px] text-slack-hint">No audience data in this export.</p>
+          ) : (
+            <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+              {categories.map((c) => (
+                <div key={c}>
+                  <p className="mb-1 text-[12px] font-medium text-slack-secondary">{c}</p>
+                  <ul className="space-y-0.5">
+                    {p.demographics[c].slice(0, 5).map((d) => (
+                      <li key={d.value} className="flex justify-between gap-2 text-[13px]">
+                        <span className="truncate text-slack-primary" title={d.value}>{d.value}</span>
+                        <span className="flex-shrink-0 tabular-nums text-slack-hint">{d.percentage}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import request from 'supertest';
 import app from '../app.js';
 import prisma from '../db.js';
 import * as XLSX from 'xlsx';
+import { postTitleFromUrl, profileNameFromFilename } from '../services/linkedinImport.js';
 
 describe('KPI dashboard', () => {
   let admin: string;
@@ -114,6 +115,52 @@ describe('KPI dashboard', () => {
       const res = await request(app).post('/kpi/linkedin/import').set('Authorization', `Bearer ${member}`)
         .attach('file', Buffer.from('x'), 'x.csv');
       expect(res.status).toBe(403);
+    });
+  });
+
+  describe('LinkedIn personal profile import', () => {
+    const profileFile = () => {
+      const book = XLSX.utils.book_new();
+      const add = (name: string, rows: unknown[][]) => XLSX.utils.book_append_sheet(book, XLSX.utils.aoa_to_sheet(rows), name);
+      add('DISCOVERY', [['Overall Performance', '10/18/2026 - 10/24/2026'], ['Impressions', '18']]);
+      add('ENGAGEMENT', [['Date', 'Impressions', 'Engagements'], ['10/23/2026', '2', '1'], ['10/24/2026', '4', '0']]);
+      add('TOP POSTS', [
+        ['Maximum of 50 posts available to include in this list'],
+        ['Post URL', 'Post Publish Date', 'Engagements', '', 'Post URL', 'Post Publish Date', 'Impressions'],
+        ['https://www.linkedin.com/posts/glenn_sport-is-having-a-moment-share-7435203482661486594-iJRO', '3/5/2026', '3', '',
+          'https://www.linkedin.com/posts/glenn_sport-is-having-a-moment-share-7435203482661486594-iJRO', '3/5/2026', '40'],
+      ]);
+      add('FOLLOWERS', [['Total followers on 10/24/2026', '3457'], ['Date', 'New followers'], ['10/23/2026', '2'], ['10/24/2026', '1']]);
+      add('AUDIENCE DEMOGRAPHICS', [['Top Demographics', 'Value', 'Percentage'], ['Company', 'Norsk Tipping', '< 1%'], ['Location', 'Greater Oslo Region', '47%']]);
+      return XLSX.write(book, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    };
+
+    it('derives names and post titles from LinkedIn’s file names and URLs', () => {
+      expect(profileNameFromFilename('AggregateAnalytics_Glenn Myklebust_2026-10-18_2026-10-24 (1).xlsx')).toBe('Glenn Myklebust');
+      expect(profileNameFromFilename('report.xlsx')).toBeNull();
+      expect(postTitleFromUrl('https://www.linkedin.com/posts/glennmyklebust_my-phone-was-dead-this-morning-so-i-ended-share-7496850352709869568-3iXC'))
+        .toBe('My phone was dead this morning so I ended…');
+    });
+
+    it('imports daily numbers, followers, top posts and audience for a profile', async () => {
+      const auth = { Authorization: `Bearer ${admin}` };
+      const res = await request(app).post('/kpi/linkedin/import').set(auth)
+        .attach('file', profileFile(), 'AggregateAnalytics_Glenn Myklebust_2026-10-18_2026-10-24.xlsx');
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ kind: 'profile', name: 'Glenn Myklebust', days: 2, posts: 1 });
+
+      const dash = await request(app).get('/kpi/dashboard').set(auth);
+      const profile = dash.body.linkedin.profiles.find((p: any) => p.name === 'Glenn Myklebust');
+      expect(profile.followers).toBe(3457);
+      expect(profile.last30).toEqual({ impressions: 6, engagements: 1, newFollowers: 3 });
+      expect(profile.topPosts[0]).toMatchObject({ title: 'Sport is having a moment…', impressions: 40, engagements: 3 });
+      expect(profile.demographics.Location).toEqual([{ value: 'Greater Oslo Region', percentage: '47%' }]);
+    });
+
+    it('needs LinkedIn’s file name to know whose profile it is', async () => {
+      const res = await request(app).post('/kpi/linkedin/import').set('Authorization', `Bearer ${admin}`)
+        .attach('file', profileFile(), 'export.xlsx');
+      expect(res.status).toBe(400);
     });
   });
 });

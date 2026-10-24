@@ -403,3 +403,55 @@ model LinkedinDailyMetric {
   reposts              Int      @default(0)
   importedAt           DateTime @default(now())
 }
+
+// Personal LinkedIn profiles (founders), imported from the creator analytics
+// export (Analytics → Posts → Export). Daily rows and posts are upserted;
+// demographics are replaced by the latest import.
+model LinkedinProfile {
+  id           Int                          @id @default(autoincrement())
+  name         String                       @unique @db.VarChar(120)
+  followers    Int?
+  followersAt  DateTime?                    @db.Date
+  importedAt   DateTime                     @default(now())
+  days         LinkedinProfileDaily[]
+  posts        LinkedinProfilePost[]
+  demographics LinkedinProfileDemographic[]
+}
+
+model LinkedinProfileDaily {
+  id           Int             @id @default(autoincrement())
+  profileId    Int
+  date         DateTime        @db.Date
+  impressions  Int?
+  engagements  Int?
+  newFollowers Int?
+  profile      LinkedinProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, date])
+}
+
+model LinkedinProfilePost {
+  id          Int             @id @default(autoincrement())
+  profileId   Int
+  url         String          @db.VarChar(500)
+  publishedAt DateTime?       @db.Date
+  impressions Int?
+  engagements Int?
+  profile     LinkedinProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, url])
+}
+
+model LinkedinProfileDemographic {
+  id         Int             @id @default(autoincrement())
+  profileId  Int
+  // Company | Location | Job title | Industry | Seniority | Company size
+  category   String          @db.VarChar(40)
+  value      String          @db.VarChar(200)
+  // As LinkedIn reports it, e.g. "47%" or "< 1%"
+  percentage String          @db.VarChar(10)
+  sortOrder  Int             @default(0)
+  profile    LinkedinProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, category])
+}
