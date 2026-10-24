@@ -77,6 +77,23 @@ describe('User Profiles', () => {
       expect(res.body.avatar).toBe('https://example.com/avatar.png');
     });
 
+    it('should upload a profile picture and serve it back', async () => {
+      const sharp = (await import('sharp')).default;
+      const png = await sharp({ create: { width: 64, height: 64, channels: 3, background: '#346F91' } }).png().toBuffer();
+
+      const res = await request(app)
+        .post('/users/me/avatar')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('avatar', png, { filename: 'me.png', contentType: 'image/png' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.avatar).toMatch(/^\/users\/me\/avatar\/[0-9a-f-]+\.png$/);
+
+      const image = await request(app).get(res.body.avatar);
+      expect(image.status).toBe(200);
+      expect(image.headers['content-type']).toBe('image/png');
+    });
+
     it('should validate avatar URL', async () => {
       const res = await request(app)
         .patch('/users/me')

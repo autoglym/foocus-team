@@ -64,3 +64,27 @@ export async function deleteFile(storagePath: string): Promise<void> {
   const { error } = await bucket.remove([storagePath]);
   if (error) throw error;
 }
+
+// ── Profile pictures ────────────────────────────────────────────────
+// Stored in a separate public bucket (unguessable file names, PNG only) so
+// <img> tags can load them without a token and they survive restarts.
+const AVATAR_BUCKET = process.env.SUPABASE_AVATAR_BUCKET || 'avatars';
+
+export async function uploadAvatar(filename: string, png: Buffer): Promise<void> {
+  if (!client) throw new Error('Supabase Storage not configured');
+  const { error } = await client.from(AVATAR_BUCKET).upload(filename, png, {
+    contentType: 'image/png',
+    upsert: false,
+  });
+  if (error) throw error;
+}
+
+export async function deleteAvatar(filename: string): Promise<void> {
+  if (!client) throw new Error('Supabase Storage not configured');
+  const { error } = await client.from(AVATAR_BUCKET).remove([filename]);
+  if (error) throw error;
+}
+
+export function avatarPublicUrl(filename: string): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/${AVATAR_BUCKET}/${encodeURIComponent(filename)}`;
+}

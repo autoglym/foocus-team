@@ -11,6 +11,7 @@ import { AuthRequest } from '../types.js';
 import { parseIntParam } from '../utils/params.js';
 import { logError } from '../utils/logger.js';
 import { isUserOnline } from '../websocket/index.js';
+import * as fileStorage from '../services/fileStorage.js';
 
 // Avatar upload setup
 const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
@@ -161,23 +162,32 @@ router.post('/me/avatar', authMiddleware, avatarUpload.single('avatar'), async (
 
     // Process image: resize to 512x512 (client already handles cropping)
     const outputFilename = crypto.randomUUID() + '.png';
-    const outputPath = path.join(uploadDir, outputFilename);
-
-    await sharp(file.path, { limitInputPixels: 4096 * 4096 })
+    const png = await sharp(file.path, { limitInputPixels: 4096 * 4096 })
       .resize(512, 512, { fit: 'cover' })
       .png()
-      .toFile(outputPath);
+      .toBuffer();
 
     // Delete the original upload
     fs.unlinkSync(file.path);
 
-    // Delete old avatar file if it's a local upload
+    // Supabase Storage when configured (survives restarts), otherwise local disk
+    if (fileStorage.isRemoteStorageEnabled) {
+      await fileStorage.uploadAvatar(outputFilename, png);
+    } else {
+      await fs.promises.writeFile(path.join(uploadDir, outputFilename), png);
+    }
+
+    // Delete the old avatar if it was one of ours
     const oldUser = await prisma.user.findUnique({ where: { id: userId }, select: { avatar: true } });
     if (oldUser?.avatar?.startsWith('/users/me/avatar/')) {
       const oldFilename = oldUser.avatar.split('/').pop()?.replace(/[^a-zA-Z0-9._-]/g, '');
       if (oldFilename) {
         const oldPath = path.resolve(uploadDir, oldFilename);
-        if (oldPath.startsWith(uploadDir) && fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        if (oldPath.startsWith(uploadDir) && fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        } else if (fileStorage.isRemoteStorageEnabled) {
+          await fileStorage.deleteAvatar(oldFilename).catch((err) => logError('Failed to delete old avatar', err));
+        }
       }
     }
 
@@ -204,7 +214,17 @@ router.post('/me/avatar', authMiddleware, avatarUpload.single('avatar'), async (
 router.get('/me/avatar/:filename', async (req: AuthRequest, res: Response) => {
   const filename = (req.params.filename as string).replace(/[^a-zA-Z0-9._-]/g, '');
   const filePath = path.resolve(uploadDir, filename);
-  if (!filePath.startsWith(uploadDir) || !fs.existsSync(filePath)) {
+  if (!filePath.startsWith(uploadDir) || !filename) {
+    res.status(404).json({ error: 'Avatar not found' });
+    return;
+  }
+  if (!fs.existsSync(filePath)) {
+    // Not on local disk: it lives in Supabase Storage (public avatars bucket)
+    if (fileStorage.isRemoteStorageEnabled) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.redirect(302, fileStorage.avatarPublicUrl(filename));
+      return;
+    }
     res.status(404).json({ error: 'Avatar not found' });
     return;
   }

@@ -105,9 +105,12 @@ router.get('/callback', async (req: Request, res: Response) => {
     }
 
     const email = claims.email.toLowerCase();
+    // Google profile picture (https only), used when the user has no picture of their own
+    const googlePicture = claims.picture?.startsWith('https://') ? claims.picture.slice(0, 500) : null;
+
     let user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, role: true, deactivatedAt: true, tokenVersion: true },
+      select: { id: true, role: true, deactivatedAt: true, tokenVersion: true, avatar: true },
     });
 
     if (user?.deactivatedAt) {
@@ -128,10 +131,13 @@ router.get('/callback', async (req: Request, res: Response) => {
           name: (claims.name || email.split('@')[0]).slice(0, 100),
           password,
           role: 'MEMBER',
+          avatar: googlePicture,
         },
-        select: { id: true, role: true, deactivatedAt: true, tokenVersion: true },
+        select: { id: true, role: true, deactivatedAt: true, tokenVersion: true, avatar: true },
       });
       await joinDefaultChannels(user.id, user.role);
+    } else if (!user.avatar && googlePicture) {
+      await prisma.user.update({ where: { id: user.id }, data: { avatar: googlePicture } });
     }
 
     const token = jwt.sign({ userId: user.id, tokenVersion: user.tokenVersion }, JWT_SECRET, {
