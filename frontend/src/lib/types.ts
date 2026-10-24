@@ -11,7 +11,8 @@ export interface User {
 export interface Channel {
   id: number;
   name: string;
-  description?: string;
+  topic?: string | null;
+  description?: string | null;
   isPrivate: boolean;
   memberCount: number;
   unreadCount: number;

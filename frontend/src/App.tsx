@@ -401,6 +401,10 @@ function AppShell() {
       useChannelStore.getState().fetchChannels();
     };
 
+    const handleChannelUpdated = (data: { channelId: number; topic: string | null; description: string | null }) => {
+      useChannelStore.getState().setChannelDetails(data.channelId, { topic: data.topic, description: data.description });
+    };
+
     const handleReactionAdded = (data: { messageId: number; reaction: { emoji: string; userId: number; user: { name: string } } }) => {
       useMessageStore.getState().onReactionAdded(data);
     };
@@ -426,6 +430,7 @@ function AppShell() {
     socket.on('channel:deleted', handleChannelDeleted);
     socket.on('channel:archived', handleChannelArchived);
     socket.on('channel:unarchived', handleChannelUnarchived);
+    socket.on('channel:updated', handleChannelUpdated);
     socket.on('reaction:added', handleReactionAdded);
     socket.on('reaction:removed', handleReactionRemoved);
 
@@ -482,6 +487,7 @@ function AppShell() {
       socket.off('channel:deleted', handleChannelDeleted);
       socket.off('channel:archived', handleChannelArchived);
       socket.off('channel:unarchived', handleChannelUnarchived);
+      socket.off('channel:updated', handleChannelUpdated);
       socket.off('reaction:added', handleReactionAdded);
       socket.off('reaction:removed', handleReactionRemoved);
       socket.off('huddle:invite:sent', handleInviteSent);

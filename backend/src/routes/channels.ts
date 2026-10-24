@@ -31,6 +31,18 @@ const createChannelSchema = z.object({
       { message: 'Channel names can only contain lowercase letters, numbers, and hyphens, and must start with a letter or number' }
     ),
   isPrivate: z.boolean().optional().default(false),
+  topic: z.string().max(250, 'Topic must be 250 characters or fewer').optional(),
+  description: z.string().max(1000, 'Description must be 1000 characters or fewer').optional(),
+});
+
+// Topic and description are plain text; empty string clears the field.
+const cleanText = (value: string) => value.replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '').trim();
+
+const updateChannelSchema = z.object({
+  topic: z.string().max(250, 'Topic must be 250 characters or fewer').optional(),
+  description: z.string().max(1000, 'Description must be 1000 characters or fewer').optional(),
+}).refine((data) => data.topic !== undefined || data.description !== undefined, {
+  message: 'Nothing to update',
 });
 
 // POST /channels - Create channel
@@ -58,6 +70,8 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
       data: {
         name,
         isPrivate,
+        topic: parsed.topic ? cleanText(parsed.topic) || null : null,
+        description: parsed.description ? cleanText(parsed.description) || null : null,
         createdBy: userId,
         members: {
           create: {
@@ -93,6 +107,48 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 // GET /channels - List all channels
+// PATCH /channels/:id - Set topic and/or description (any non-guest member)
+router.patch('/:id', authMiddleware, requireChannelMembership, async (req: AuthRequest, res: Response) => {
+  try {
+    if (req.user!.role === 'GUEST') {
+      res.status(403).json({ error: 'Guests cannot edit channel details' });
+      return;
+    }
+    const parsed = updateChannelSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message || 'Invalid input' });
+      return;
+    }
+    const channelId = req.channelId!;
+    const existing = await prisma.channel.findUnique({ where: { id: channelId }, select: { archivedAt: true } });
+    if (existing?.archivedAt) {
+      res.status(403).json({ error: 'This channel has been archived' });
+      return;
+    }
+
+    const data: { topic?: string | null; description?: string | null } = {};
+    if (parsed.data.topic !== undefined) data.topic = cleanText(parsed.data.topic) || null;
+    if (parsed.data.description !== undefined) data.description = cleanText(parsed.data.description) || null;
+
+    const channel = await prisma.channel.update({
+      where: { id: channelId },
+      data,
+      select: { id: true, topic: true, description: true },
+    });
+
+    getIO()?.to(`channel:${channelId}`).emit('channel:updated', {
+      channelId,
+      topic: channel.topic,
+      description: channel.description,
+    });
+
+    res.json(channel);
+  } catch (error) {
+    logError('Update channel error', error);
+    res.status(500).json({ error: 'Failed to update channel' });
+  }
+});
+
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;

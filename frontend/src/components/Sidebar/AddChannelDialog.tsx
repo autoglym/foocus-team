@@ -7,7 +7,7 @@ import type { Channel } from '@/lib/types';
 interface AddChannelDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreateChannel: (name: string, isPrivate?: boolean) => Promise<void>;
+  onCreateChannel: (name: string, isPrivate?: boolean, description?: string) => Promise<void>;
   browseChannels: Channel[];
   onJoinChannel: (channelId: number) => Promise<void>;
   onNavigateToChannel: (channelId: number) => void;
@@ -26,6 +26,7 @@ export function AddChannelDialog({
   const [addChannelMode, setAddChannelMode] = useState<'create' | 'browse'>('create');
   const [newChannelName, setNewChannelName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [description, setDescription] = useState('');
   const [createChannelError, setCreateChannelError] = useState('');
 
   // Reset state when dialog opens
@@ -34,6 +35,7 @@ export function AddChannelDialog({
       setAddChannelMode('create');
       setNewChannelName('');
       setIsPrivate(false);
+      setDescription('');
       setCreateChannelError('');
     }
   }, [open]);
@@ -96,7 +98,7 @@ export function AddChannelDialog({
                   return;
                 }
                 try {
-                  await onCreateChannel(name, isPrivate);
+                  await onCreateChannel(name, isPrivate, description.trim() || undefined);
                   setNewChannelName('');
                   setCreateChannelError('');
                 } catch (err) {
@@ -140,6 +142,20 @@ export function AddChannelDialog({
                 )}>
                   {newChannelName.trim().length}/25
                 </span>
+              </div>
+
+              <div className="mt-3">
+                <label htmlFor="new-channel-description" className="block text-[14px] font-medium text-slack-primary mb-1">
+                  Description <span className="font-normal text-slack-hint">(optional)</span>
+                </label>
+                <textarea
+                  id="new-channel-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
+                  placeholder="What is this channel for?"
+                  rows={2}
+                  className="w-full resize-none rounded border border-slack-input-border px-3 py-2 text-[15px] text-slack-primary outline-none focus:border-slack-link focus:ring-1 focus:ring-slack-link"
+                />
               </div>
 
               <div className="mt-3">
@@ -206,10 +222,15 @@ export function AddChannelDialog({
                         handleClose();
                       }}
                     >
-                      <div className="flex items-center gap-2">
-                        {ch.isPrivate ? <Lock className="h-3.5 w-3.5 text-slack-disabled" /> : <Hash className="h-3.5 w-3.5 text-slack-disabled" />}
-                        <span className="text-[15px] text-slack-primary">{ch.name}</span>
-                        <span className="text-[12px] text-slack-hint">{ch.memberCount} {ch.memberCount === 1 ? 'member' : 'members'}</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          {ch.isPrivate ? <Lock className="h-3.5 w-3.5 text-slack-disabled" /> : <Hash className="h-3.5 w-3.5 text-slack-disabled" />}
+                          <span className="text-[15px] text-slack-primary">{ch.name}</span>
+                          <span className="text-[12px] text-slack-hint">{ch.memberCount} {ch.memberCount === 1 ? 'member' : 'members'}</span>
+                        </div>
+                        {ch.description && (
+                          <p className="ml-[22px] truncate text-[13px] text-slack-secondary">{ch.description}</p>
+                        )}
                       </div>
                       {ch.isMember ? (
                         <span data-testid="joined-badge" className="text-[12px] text-slack-hint font-medium px-2 py-1">Joined</span>

@@ -66,9 +66,11 @@ model InviteLink {
 }
 
 model Channel {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique @db.VarChar(80)
-  isPrivate  Boolean   @default(false)
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(80)
+  topic       String?   @db.VarChar(250)
+  description String?   @db.VarChar(1000)
+  isPrivate   Boolean   @default(false)
   createdBy  Int?
   archivedAt DateTime?
   createdAt  DateTime  @default(now())

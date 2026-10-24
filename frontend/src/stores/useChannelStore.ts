@@ -39,7 +39,9 @@ interface ChannelState {
 
   fetchChannels: () => Promise<void>;
   fetchDirectMessages: () => Promise<void>;
-  createChannel: (name: string, isPrivate?: boolean) => Promise<number>;
+  createChannel: (name: string, isPrivate?: boolean, description?: string) => Promise<number>;
+  setChannelDetails: (channelId: number, details: { topic: string | null; description: string | null }) => void;
+  updateChannelDetails: (channelId: number, data: { topic?: string; description?: string }) => Promise<void>;
   joinChannel: (channelId: number) => Promise<void>;
   leaveChannel: (channelId: number) => Promise<number | null>;
   removeChannelMember: (channelId: number, userId: number) => Promise<void>;
@@ -95,6 +97,8 @@ export const useChannelStore = create<ChannelState>((set, get) => ({
       const channels: Channel[] = apiChannels.map((ch) => ({
         id: ch.id,
         name: ch.name,
+        topic: ch.topic ?? null,
+        description: ch.description ?? null,
         isPrivate: ch.isPrivate,
         memberCount: ch._count.members,
         unreadCount: ch.unreadCount,
@@ -110,12 +114,25 @@ export const useChannelStore = create<ChannelState>((set, get) => ({
     }
   },
 
-  createChannel: async (name: string, isPrivate = false) => {
+  setChannelDetails: (channelId, details) => {
+    set((state) => ({
+      channels: state.channels.map((ch) => (ch.id === channelId ? { ...ch, ...details } : ch)),
+    }));
+  },
+
+  updateChannelDetails: async (channelId, data) => {
+    const updated = await api.updateChannelDetails(channelId, data);
+    get().setChannelDetails(channelId, { topic: updated.topic, description: updated.description });
+  },
+
+  createChannel: async (name: string, isPrivate = false, description?: string) => {
     try {
-      const ch = await api.createChannel(name, isPrivate);
+      const ch = await api.createChannel(name, isPrivate, description);
       const channel: Channel = {
         id: ch.id,
         name: ch.name,
+        topic: ch.topic ?? null,
+        description: ch.description ?? null,
         isPrivate: ch.isPrivate,
         memberCount: ch._count?.members ?? 1,
         unreadCount: 0,

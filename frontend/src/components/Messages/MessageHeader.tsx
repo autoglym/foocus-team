@@ -12,6 +12,7 @@ import { HeaderNotifications } from './HeaderNotifications';
 import { HeaderTabs } from './HeaderTabs';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
 import { useMobileStore } from '@/stores/useMobileStore';
+import { ChannelDetailsDialog } from './ChannelDetailsDialog';
 
 interface MessageHeaderProps {
   channel: Channel;
@@ -30,6 +31,7 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
   const toggleStar = useChannelStore((s) => s.toggleStar);
   const leaveChannel = useChannelStore((s) => s.leaveChannel);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [previewMembers, setPreviewMembers] = useState<ChannelMember[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -82,20 +84,23 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
       {/* Top Row - Channel name and actions */}
       <div className="flex h-[49px] items-center justify-between px-4">
         {/* Left Section */}
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <button
             onClick={openSidebar}
             className="mr-1 flex h-8 w-8 items-center justify-center rounded hover:bg-slack-hover md:hidden"
           >
             <Menu className="h-5 w-5 text-slack-secondary" />
           </button>
-          <div
+          <button
+            type="button"
             data-testid="channel-name-button"
-            className="flex items-center gap-1 px-1.5 py-0.5"
+            onClick={() => setShowDetails(true)}
+            title="Channel details"
+            className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 hover:bg-slack-hover"
           >
             {channel.isPrivate ? <Lock className="h-[16px] w-[16px] text-slack-secondary" /> : <Hash className="h-[16px] w-[16px] text-slack-secondary" />}
             <span className="font-heading text-[18px] font-bold tracking-tight text-slack-primary">{channel.name}</span>
-          </div>
+          </button>
           {!readOnly && (
             <Button
               variant="toolbar"
@@ -106,6 +111,20 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
             >
               <Star className={cn('h-4 w-4', channel.isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-slack-secondary')} />
             </Button>
+          )}
+          {(channel.topic || !readOnly) && (
+            <button
+              type="button"
+              data-testid="channel-topic"
+              onClick={() => setShowDetails(true)}
+              title={channel.topic ?? 'Add a topic'}
+              className={cn(
+                'ml-1 hidden min-w-0 max-w-[420px] truncate rounded-lg px-2 py-0.5 text-left text-[13px] hover:bg-slack-hover md:block',
+                channel.topic ? 'text-slack-secondary' : 'text-slack-hint'
+              )}
+            >
+              {channel.topic || 'Add a topic'}
+            </button>
           )}
         </div>
 
@@ -195,6 +214,12 @@ export function MessageHeader({ channel, showMembers, onToggleMembers, onToggleP
       {showMobileSearch && (
         <MobileSearchOverlay onClose={() => setShowMobileSearch(false)} />
       )}
+      <ChannelDetailsDialog
+        channel={channel}
+        open={showDetails}
+        readOnly={readOnly}
+        onClose={() => setShowDetails(false)}
+      />
     </header>
   );
 }

@@ -171,6 +171,8 @@ export function validateInvite(code: string) {
 export interface ApiChannel {
   id: number;
   name: string;
+  topic?: string | null;
+  description?: string | null;
   isPrivate: boolean;
   createdAt: string;
   unreadCount: number;
@@ -201,10 +203,17 @@ export function getChannel(id: number) {
   return request<ApiChannelDetail>(`/channels/${id}`);
 }
 
-export function createChannel(name: string, isPrivate = false) {
+export function createChannel(name: string, isPrivate = false, description?: string) {
   return request<ApiChannel>('/channels', {
     method: 'POST',
-    body: JSON.stringify({ name, isPrivate }),
+    body: JSON.stringify({ name, isPrivate, ...(description ? { description } : {}) }),
+  });
+}
+
+export function updateChannelDetails(id: number, data: { topic?: string; description?: string }) {
+  return request<{ id: number; topic: string | null; description: string | null }>(`/channels/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   });
 }
 

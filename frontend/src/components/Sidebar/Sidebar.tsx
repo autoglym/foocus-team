@@ -100,6 +100,7 @@ export function Sidebar() {
         .map((ch) => ({
           id: ch.id,
           name: ch.name,
+          description: ch.description ?? null,
           isPrivate: ch.isPrivate,
           memberCount: ch._count.members,
           unreadCount: ch.unreadCount,
@@ -111,8 +112,8 @@ export function Sidebar() {
     }
   };
 
-  const handleCreateChannel = async (name: string, isPrivate?: boolean) => {
-    const channelId = await createChannel(name, isPrivate);
+  const handleCreateChannel = async (name: string, isPrivate?: boolean, description?: string) => {
+    const channelId = await createChannel(name, isPrivate, description);
     setShowAddChannelDialog(false);
     navTo(`/c/${channelId}`);
   };

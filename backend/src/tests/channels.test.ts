@@ -87,6 +87,72 @@ describe('Channels', () => {
     });
   });
 
+  describe('PATCH /channels/:id (topic and description)', () => {
+    it('should accept topic and description on create', async () => {
+      const res = await request(app)
+        .post('/channels')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ name: 'with-topic', topic: 'Q4-lansering', description: 'Alt om lanseringen i Q4' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.topic).toBe('Q4-lansering');
+      expect(res.body.description).toBe('Alt om lanseringen i Q4');
+    });
+
+    it('should let a member update the topic and clear the description', async () => {
+      const created = await request(app)
+        .post('/channels')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ name: 'edit-topic', description: 'Old' });
+
+      const res = await request(app)
+        .patch(`/channels/${created.body.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ topic: '  Nytt emne  ', description: '' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.topic).toBe('Nytt emne');
+      expect(res.body.description).toBeNull();
+
+      const detail = await request(app)
+        .get(`/channels/${created.body.id}`)
+        .set('Authorization', `Bearer ${authToken}`);
+      expect(detail.body.topic).toBe('Nytt emne');
+    });
+
+    it('should reject non-members', async () => {
+      const created = await request(app)
+        .post('/channels')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ name: 'members-only' });
+
+      const other = await request(app).post('/auth/register').send({
+        email: 'channel-other@example.com', password: TEST_PASSWORD, name: 'Other',
+      });
+
+      const res = await request(app)
+        .patch(`/channels/${created.body.id}`)
+        .set('Authorization', `Bearer ${other.body.token}`)
+        .send({ topic: 'Hijack' });
+
+      expect(res.status).toBe(403);
+    });
+
+    it('should reject a topic longer than 250 characters', async () => {
+      const created = await request(app)
+        .post('/channels')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ name: 'long-topic' });
+
+      const res = await request(app)
+        .patch(`/channels/${created.body.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ topic: 'x'.repeat(251) });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
   describe('GET /channels', () => {
     beforeEach(async () => {
       await request(app)
