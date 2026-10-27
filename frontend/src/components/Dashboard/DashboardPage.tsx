@@ -87,7 +87,7 @@ export function DashboardPage() {
   const manualMetrics = data?.metrics.filter((m) => m.source === 'manual') ?? [];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-slack-surface" data-testid="dashboard">
+    <div className="flex min-h-0 flex-1 flex-col bg-slack-canvas" data-testid="dashboard">
       <div className="flex flex-wrap items-end gap-x-4 gap-y-1 px-6 pb-2 pt-5">
         <h1 className="font-heading text-[22px] font-bold tracking-tight text-slack-primary">Dashboard</h1>
         <p className="pb-0.5 text-[13px] text-slack-hint">
@@ -99,12 +99,12 @@ export function DashboardPage() {
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
         {error && <p className="mb-3 rounded-xl bg-slack-error-bg px-3 py-2 text-[13px] text-slack-error" role="alert">{error}</p>}
         {data && !data.crm.configured && (
-          <p className="mb-4 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary">
+          <p className="mb-4 rounded-2xl surface-well-sm px-4 py-3 text-[13px] text-slack-secondary">
             The CRM isn’t connected on this server (RONJA_KPI_DATABASE_URL is not set), so only manual numbers are shown.
           </p>
         )}
         {data?.crm.error && (
-          <p className="mb-4 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">{data.crm.error}</p>
+          <p className="mb-4 rounded-2xl surface-well-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">{data.crm.error}</p>
         )}
         {!data && !error && <p className="py-6 text-[14px] text-slack-hint">Loading…</p>}
 
@@ -128,9 +128,9 @@ export function DashboardPage() {
                 <h2 id="web-heading" className="mb-3 text-[13px] font-medium text-slack-secondary">
                   Website · Google Analytics, last 30 days
                 </h2>
-                {data.ga4.error && <p className="mb-3 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">{data.ga4.error}</p>}
+                {data.ga4.error && <p className="mb-3 rounded-2xl surface-well-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">{data.ga4.error}</p>}
                 {data.ga4.ok && data.ga4.metrics?.every((m) => m.current === 0) && (
-                  <p className="mb-3 rounded-2xl neu-inset-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">
+                  <p className="mb-3 rounded-2xl surface-well-sm px-4 py-3 text-[13px] text-slack-secondary" role="status">
                     Google Analytics has received no visits from the website in the last 30 days. The tracking code on the site may be missing or blocked by a consent banner.
                   </p>
                 )}
@@ -163,7 +163,7 @@ export function DashboardPage() {
                 {manualMetrics.map((m) => <MetricTile key={m.id} metric={m} onChanged={load} />)}
                 {adding && <NewMetricTile onDone={async () => { setAdding(false); await load(); }} onCancel={() => setAdding(false)} />}
                 {manualMetrics.length === 0 && !adding && (
-                  <p className="col-span-full rounded-[24px] neu-inset px-5 py-6 text-[14px] text-slack-secondary">
+                  <p className="col-span-full rounded-[24px] surface-well px-5 py-6 text-[14px] text-slack-secondary">
                     Add numbers that don’t come from the CRM, like LinkedIn followers or website visitors, and update them weekly.
                   </p>
                 )}
@@ -224,7 +224,7 @@ function MetricTile({ metric, hero, onChanged }: { metric: Metric; hero?: boolea
   const [renaming, setRenaming] = useState(false);
 
   return (
-    <article className="relative flex flex-col rounded-[24px] neu-raised px-5 pb-4 pt-4" data-testid="kpi-tile">
+    <article className="relative flex flex-col rounded-[24px] surface-card px-5 pb-4 pt-4" data-testid="kpi-tile">
       <div className="flex items-start gap-2">
         {renaming ? (
           <form className="flex-1" onSubmit={async (e) => {
@@ -235,7 +235,7 @@ function MetricTile({ metric, hero, onChanged }: { metric: Metric; hero?: boolea
             await onChanged();
           }}>
             <input name="label" defaultValue={metric.label} autoFocus aria-label="Metric name" onBlur={(e) => e.currentTarget.form?.requestSubmit()}
-              className="w-full rounded-lg neu-inset-sm px-2 py-0.5 text-[13px] outline-none" />
+              className="w-full rounded-lg surface-well-sm px-2 py-0.5 text-[13px] outline-none" />
           </form>
         ) : (
           <h3 className="flex-1 text-[13px] font-medium text-slack-secondary">{metric.label}</h3>
@@ -247,13 +247,13 @@ function MetricTile({ metric, hero, onChanged }: { metric: Metric; hero?: boolea
         )}
       </div>
       {menu && (
-        <div className="absolute right-4 top-10 z-20 w-[210px] rounded-2xl neu-raised p-1.5" role="menu">
-          <button role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[14px] hover:neu-raised-sm"
+        <div className="absolute right-4 top-10 z-20 w-[210px] rounded-xl surface-pop p-1.5" role="menu">
+          <button role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[14px] hover:bg-slack-hover"
             onClick={() => { setMenu(false); setRenaming(true); }}>
             <Pencil className="h-4 w-4" /> Rename
           </button>
           {metric.history.length > 0 && (
-            <button role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[14px] hover:neu-raised-sm"
+            <button role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[14px] hover:bg-slack-hover"
               onClick={async () => {
                 setMenu(false);
                 const last = metric.history[metric.history.length - 1];
@@ -264,7 +264,7 @@ function MetricTile({ metric, hero, onChanged }: { metric: Metric; hero?: boolea
               <Undo2 className="h-4 w-4" /> Remove latest value
             </button>
           )}
-          <button role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[14px] text-slack-error hover:neu-raised-sm"
+          <button role="menuitem" className="flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[14px] text-slack-error hover:bg-slack-hover"
             onClick={async () => {
               setMenu(false);
               if (!window.confirm(`Delete “${metric.label}” and its history?`)) return;
@@ -320,9 +320,9 @@ function UpdateValueForm({ metric, onDone, onCancel }: { metric: Metric; onDone:
       <div className="flex gap-2">
         <input value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" autoFocus aria-label={`New value for ${metric.label}`}
           placeholder={metric.current !== null ? `Last: ${num.format(metric.current)}` : 'Value'}
-          className="min-w-0 flex-1 rounded-xl neu-inset-sm px-3 py-1.5 text-[14px] tabular-nums outline-none focus:ring-2 focus:ring-slack-btn/40" />
+          className="min-w-0 flex-1 rounded-xl surface-well-sm px-3 py-1.5 text-[14px] tabular-nums outline-none focus:ring-2 focus:ring-slack-btn/40" />
         <input type="date" value={date} max={format(new Date(), 'yyyy-MM-dd')} onChange={(e) => setDate(e.target.value)} aria-label="Date"
-          className="w-[132px] rounded-xl neu-inset-sm px-2 py-1.5 text-[13px] outline-none" />
+          className="w-[132px] rounded-xl surface-well-sm px-2 py-1.5 text-[13px] outline-none" />
       </div>
       {error && <p className="text-[12px] text-slack-error">{error}</p>}
       <div className="flex justify-end gap-2">
@@ -339,7 +339,7 @@ function NewMetricTile({ onDone, onCancel }: { onDone: () => Promise<void>; onCa
   const [error, setError] = useState('');
   return (
     <form
-      className="flex flex-col gap-3 rounded-[24px] neu-inset px-5 py-4"
+      className="flex flex-col gap-3 rounded-[24px] surface-well px-5 py-4"
       onSubmit={async (e) => {
         e.preventDefault();
         try {
@@ -351,11 +351,11 @@ function NewMetricTile({ onDone, onCancel }: { onDone: () => Promise<void>; onCa
       }}
     >
       <input value={label} onChange={(e) => setLabel(e.target.value.slice(0, 80))} autoFocus placeholder="e.g. LinkedIn followers" aria-label="Metric name"
-        className="rounded-xl neu-raised-sm px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-slack-btn/40" />
-      <div className="flex gap-1 rounded-full neu-inset-sm p-1" role="radiogroup" aria-label="Unit">
+        className="rounded-xl surface-card-sm px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-slack-btn/40" />
+      <div className="flex gap-1 rounded-full surface-well-sm p-1" role="radiogroup" aria-label="Unit">
         {([['count', 'Number'], ['NOK', 'NOK'], ['percent', '%']] as const).map(([u, l]) => (
           <button key={u} type="button" role="radio" aria-checked={unit === u} onClick={() => setUnit(u)}
-            className={cn('flex-1 rounded-full py-1 text-[13px]', unit === u ? 'neu-raised-sm font-medium text-slack-primary' : 'text-slack-secondary')}>
+            className={cn('flex-1 rounded-full py-1 text-[13px]', unit === u ? 'surface-card-sm font-medium text-slack-primary' : 'text-slack-secondary')}>
             {l}
           </button>
         ))}
@@ -436,7 +436,7 @@ function PipelineByStage({ rows }: { rows: StageRow[] }) {
   const max = Math.max(...sorted.map((r) => r.total), 1);
 
   return (
-    <section aria-labelledby="pipeline-heading" className="mt-8 rounded-[24px] neu-raised px-6 py-5">
+    <section aria-labelledby="pipeline-heading" className="mt-8 rounded-[24px] surface-card px-6 py-5">
       <h2 id="pipeline-heading" className="font-heading text-[16px] font-bold text-slack-primary">Pipeline by stage</h2>
       <p className="mb-4 text-[12px] text-slack-hint">Dark bar = weighted value (deal value × probability) · light bar = unweighted value</p>
       <ul className="space-y-3.5">
@@ -448,7 +448,7 @@ function PipelineByStage({ rows }: { rows: StageRow[] }) {
             onMouseLeave={() => setHover(null)}
           >
             <span className="text-[13px] font-medium text-slack-primary">{stageLabel(r.stage)}</span>
-            <span className="relative h-[14px] rounded-full neu-inset-sm" aria-hidden>
+            <span className="relative h-[14px] rounded-full surface-well-sm" aria-hidden>
               <span className="absolute inset-y-[2px] left-[2px] rounded-full bg-[var(--color-chart-1)]/25" style={{ width: `calc(${(r.total / max) * 100}% - 4px)` }} />
               <span className="absolute inset-y-[2px] left-[2px] rounded-full bg-[var(--color-chart-1)]" style={{ width: `calc(${(r.weighted / max) * 100}% - 4px)` }} />
               {hover === r.stage && (
@@ -473,7 +473,7 @@ function TrafficSources({ channels, sources }: { channels: Array<{ name: string;
   const total = channels.reduce((sum, c) => sum + c.sessions, 0) || 1;
   const max = Math.max(...channels.map((c) => c.sessions), 1);
   return (
-    <section aria-labelledby="sources-heading" className="rounded-[24px] neu-raised px-6 py-5">
+    <section aria-labelledby="sources-heading" className="rounded-[24px] surface-card px-6 py-5">
       <h3 id="sources-heading" className="font-heading text-[16px] font-bold text-slack-primary">Traffic sources</h3>
       <p className="mb-4 text-[12px] text-slack-hint">Sessions by channel</p>
       {channels.length === 0 ? (
@@ -484,7 +484,7 @@ function TrafficSources({ channels, sources }: { channels: Array<{ name: string;
             <li key={c.name} className="grid grid-cols-[120px_1fr_auto] items-center gap-3"
               onMouseEnter={() => setHover(c.name)} onMouseLeave={() => setHover(null)}>
               <span className="truncate text-[13px] font-medium text-slack-primary" title={c.name}>{c.name}</span>
-              <span className="relative h-[12px] rounded-full neu-inset-sm" aria-hidden>
+              <span className="relative h-[12px] rounded-full surface-well-sm" aria-hidden>
                 <span className="absolute inset-y-[2px] left-[2px] rounded-full bg-[var(--color-chart-1)]"
                   style={{ width: `max(calc(${(c.sessions / max) * 100}% - 4px), 6px)` }} />
                 {hover === c.name && (
@@ -519,7 +519,7 @@ function TrafficSources({ channels, sources }: { channels: Array<{ name: string;
 
 function TopPages({ pages }: { pages: Array<{ path: string; title: string; views: number; users: number }> }) {
   return (
-    <section aria-labelledby="pages-heading" className="rounded-[24px] neu-raised px-6 py-5">
+    <section aria-labelledby="pages-heading" className="rounded-[24px] surface-card px-6 py-5">
       <h3 id="pages-heading" className="font-heading text-[16px] font-bold text-slack-primary">Most visited pages</h3>
       <p className="mb-3 text-[12px] text-slack-hint">Page views and users, last 30 days</p>
       {pages.length === 0 ? (
@@ -626,7 +626,7 @@ function LinkedinSection({ summary, onImported }: { summary: LinkedinSummary; on
 
       <div
         className={cn(
-          'mt-5 flex flex-wrap items-center gap-4 rounded-[24px] neu-inset px-5 py-4 transition-shadow',
+          'mt-5 flex flex-wrap items-center gap-4 rounded-[24px] surface-well px-5 py-4 transition-shadow',
           dragOver && 'ring-2 ring-slack-btn/50',
         )}
         onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragOver(true); } }}
@@ -671,7 +671,7 @@ function MonthlyImpressions({ months }: { months: Array<LiTotals & { month: stri
   if (months.length === 0) return null;
   const max = Math.max(...months.map((m) => m.impressions), 1);
   return (
-    <div className="mt-5 rounded-[24px] neu-raised px-6 py-5">
+    <div className="mt-5 rounded-[24px] surface-card px-6 py-5">
       <h3 className="font-heading text-[16px] font-bold text-slack-primary">Impressions per month</h3>
       <p className="mb-4 text-[12px] text-slack-hint">Organic and sponsored, from the LinkedIn export</p>
       <div className="flex h-[140px] items-end gap-2" role="img"
@@ -740,7 +740,7 @@ function ProfileCard({ profile: p, onChanged }: { profile: LinkedinProfileSummar
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <section className="rounded-[24px] neu-raised px-6 py-5" aria-label={`${p.name}: top posts`}>
+        <section className="rounded-[24px] surface-card px-6 py-5" aria-label={`${p.name}: top posts`}>
           <h4 className="font-heading text-[16px] font-bold text-slack-primary">Top posts</h4>
           <p className="mb-3 text-[12px] text-slack-hint">Impressions and engagements in the imported period</p>
           {p.topPosts.length === 0 ? (
@@ -765,7 +765,7 @@ function ProfileCard({ profile: p, onChanged }: { profile: LinkedinProfileSummar
           )}
         </section>
 
-        <section className="rounded-[24px] neu-raised px-6 py-5" aria-label={`${p.name}: audience`}>
+        <section className="rounded-[24px] surface-card px-6 py-5" aria-label={`${p.name}: audience`}>
           <h4 className="font-heading text-[16px] font-bold text-slack-primary">Who you reach</h4>
           <p className="mb-3 text-[12px] text-slack-hint">Top audience by category, as reported by LinkedIn</p>
           {categories.length === 0 ? (

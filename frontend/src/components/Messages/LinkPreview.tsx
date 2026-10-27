@@ -78,9 +78,9 @@ function DocLinkCard({ documentId }: { documentId: number }) {
     <Link
       to={`/c/${doc.channelId}/docs/${doc.id}`}
       data-testid="doc-link-preview"
-      className="mt-2 flex max-w-[560px] items-center gap-3 rounded-2xl neu-raised-sm px-3 py-2.5"
+      className="mt-2 flex max-w-[560px] items-center gap-3 rounded-2xl surface-card-sm px-3 py-2.5"
     >
-      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl neu-inset-sm">
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl surface-well-sm">
         <NotebookText className="h-5 w-5 text-slack-btn" />
       </span>
       <span className="min-w-0">
@@ -97,7 +97,7 @@ function GoogleEmbed({ url, kind, id }: { url: string; kind: keyof typeof GOOGLE
   const [open, setOpen] = useState(true);
   const info = GOOGLE_KIND[kind];
   return (
-    <div data-testid="google-embed" className="mt-2 max-w-[560px] overflow-hidden rounded-2xl neu-raised-sm">
+    <div data-testid="google-embed" className="mt-2 max-w-[560px] overflow-hidden rounded-2xl surface-card-sm">
       <div className="flex items-center gap-2 px-3 py-2 text-[13px]">
         <button
           type="button"
@@ -145,7 +145,7 @@ function LinkCard({ url }: { url: string }) {
       target="_blank"
       rel="noopener noreferrer"
       data-testid="link-preview"
-      className="mt-2 flex max-w-[560px] overflow-hidden rounded-2xl neu-raised-sm transition-shadow hover:shadow-[0_8px_24px_-8px_rgba(15,17,24,0.18)]"
+      className="mt-2 flex max-w-[560px] overflow-hidden rounded-2xl surface-card-sm transition-shadow hover:shadow-[0_8px_24px_-8px_rgba(15,17,24,0.18)]"
     >
       <div className="min-w-0 flex-1 border-l-[3px] border-slack-btn px-3 py-2.5">
         <p className="text-[12px] text-slack-hint">{preview.siteName}</p>

@@ -54,8 +54,8 @@ function ReactionPill({
         className={cn(
           'inline-flex h-[24px] items-center gap-1 rounded-full border px-[8px] text-[12px] transition-all',
           hasReacted
-            ? 'border-transparent neu-inset-sm text-slack-link font-semibold'
-            : 'border-transparent neu-raised-sm text-slack-primary hover:text-slack-link'
+            ? 'border-slack-link/40 bg-slack-highlight text-slack-link font-semibold'
+            : 'border-slack-border bg-white text-slack-primary hover:border-slack-border-dark'
         )}
       >
         <span data-testid="reaction-emoji" className="text-sm leading-none">{shortcodeToNative(reaction.emoji)}</span>
@@ -120,7 +120,7 @@ export function MessageReactions({ reactions, messageId, onAddReaction, onRemove
       })}
       <button
         onClick={() => setShowPicker(!showPicker)}
-        className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full neu-raised-sm text-slack-secondary hover:text-slack-link active:neu-inset-sm"
+        className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full border border-slack-border bg-white text-slack-secondary hover:border-slack-border-dark hover:text-slack-primary"
       >
         <Plus className="h-[12px] w-[12px]" />
       </button>

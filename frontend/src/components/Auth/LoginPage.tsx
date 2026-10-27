@@ -52,14 +52,14 @@ export function LoginPage() {
       </div>
 
       {/* Login Form */}
-      <div className="w-full max-w-[420px] rounded-[28px] neu-raised p-8">
+      <div className="w-full max-w-[420px] rounded-[28px] surface-card p-8">
 
         {googleEnabled && (
           <>
             <a
               href="/auth/google"
               data-testid="google-signin"
-              className="flex h-11 w-full items-center justify-center gap-3 rounded-xl neu-raised-sm text-[15px] font-medium text-slack-primary transition-shadow active:neu-inset-sm"
+              className="flex h-11 w-full items-center justify-center gap-3 rounded-xl surface-card-sm text-[15px] font-medium text-slack-primary transition-shadow active:bg-slack-active-tab"
             >
               <svg viewBox="0 0 48 48" className="h-5 w-5" aria-hidden="true">
                 <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />

@@ -163,7 +163,7 @@ export function DocumentPage() {
   const statusText = { saved: 'Saved', unsaved: 'Unsaved changes', saving: 'Saving…', error: 'Could not save — retrying when you type' }[status];
 
   return (
-    <div className="flex h-full min-h-0 flex-1 bg-slack-surface">
+    <div className="flex h-full min-h-0 flex-1 bg-slack-canvas">
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar: where the document lives, who's here, save state */}
         <header className="relative z-10 flex h-[52px] flex-shrink-0 items-center gap-3 px-5 shadow-[0_1px_0_rgba(15,17,24,0.06)]">
@@ -187,7 +187,7 @@ export function DocumentPage() {
 
           <div className="ml-auto flex flex-shrink-0 items-center gap-2">
             {otherEditors.length > 0 && (
-              <span data-testid="doc-editing-presence" className="flex items-center gap-1.5 rounded-full neu-inset-sm px-2.5 py-1 text-[12px] text-slack-link">
+              <span data-testid="doc-editing-presence" className="flex items-center gap-1.5 rounded-full surface-well-sm px-2.5 py-1 text-[12px] text-slack-link">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-[#1F8854]" />
                 {otherEditors.map(([, v]) => v.name).join(', ')} {otherEditors.length === 1 ? 'is' : 'are'} editing
               </span>
@@ -211,7 +211,7 @@ export function DocumentPage() {
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-[880px] px-6 pb-16 pt-8">
             {remoteUpdate && (
-              <div className="mb-4 flex items-center gap-3 rounded-2xl neu-inset-sm px-4 py-2.5 text-[14px] text-slack-primary" role="status">
+              <div className="mb-4 flex items-center gap-3 rounded-2xl surface-well-sm px-4 py-2.5 text-[14px] text-slack-primary" role="status">
                 <span>{remoteUpdate} saved a newer version.</span>
                 <Button size="sm" className="ml-auto" onClick={() => load()}>Load latest</Button>
               </div>
@@ -234,10 +234,10 @@ export function DocumentPage() {
                 <p className="mb-5 mt-1 flex items-center gap-1.5 text-[13px] text-slack-hint">
                   <Avatar src={doc.updater.avatar ?? undefined} alt={doc.updater.name} fallback={doc.updater.name} size="sm" className="h-4 w-4" />
                   Last edited by {doc.updater.name} · {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
-                  {readOnly && <span className="ml-2 rounded-full neu-inset-sm px-2 py-0.5 text-[11px]">Read-only</span>}
+                  {readOnly && <span className="ml-2 rounded-full surface-well-sm px-2 py-0.5 text-[11px]">Read-only</span>}
                 </p>
 
-                <div className="min-h-[60vh] rounded-[28px] neu-raised px-4 py-6 md:px-8">
+                <div className="min-h-[60vh] rounded-[28px] surface-card px-4 py-6 md:px-8">
                   <Suspense fallback={<EditorFallback />}>
                     <BlockEditor
                       key={editorKey}
@@ -312,7 +312,7 @@ function VersionHistory({ documentId, readOnly, onClose, onRestored }: {
             onClick={() => getVersion(documentId, v.id).then(setPreview)}
             className={cn(
               'flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-all',
-              preview?.id === v.id ? 'neu-inset-sm' : 'hover:neu-raised-sm'
+              preview?.id === v.id ? 'surface-well-sm' : 'hover:bg-slack-hover'
             )}
           >
             <Avatar src={v.author.avatar ?? undefined} alt={v.author.name} fallback={v.author.name} size="sm" className="h-7 w-7" />
@@ -328,7 +328,7 @@ function VersionHistory({ documentId, readOnly, onClose, onRestored }: {
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={() => setPreview(null)}>
-          <div className="flex max-h-[85vh] w-full max-w-[820px] flex-col rounded-[28px] neu-dialog" onMouseDown={(e) => e.stopPropagation()}>
+          <div className="flex max-h-[85vh] w-full max-w-[820px] flex-col rounded-[28px] surface-dialog" onMouseDown={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 px-6 pt-5">
               <div className="min-w-0">
                 <h3 className="truncate font-heading text-[20px] font-bold text-slack-primary">{preview.title}</h3>
@@ -343,7 +343,7 @@ function VersionHistory({ documentId, readOnly, onClose, onRestored }: {
                 )}
               </div>
             </div>
-            <div className="m-4 min-h-0 overflow-y-auto rounded-2xl neu-inset px-4 py-5">
+            <div className="m-4 min-h-0 overflow-y-auto rounded-2xl surface-well px-4 py-5">
               <Suspense fallback={<EditorFallback />}>
                 <BlockEditor key={preview.id} initialContent={preview.content} editable={false} />
               </Suspense>

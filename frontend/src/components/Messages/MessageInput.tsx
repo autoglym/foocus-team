@@ -155,7 +155,7 @@ export const MessageInput = React.memo(function MessageInput({ placeholder, onSe
 
   return (
     <div className="relative px-5 pb-5 pt-3 bg-slack-surface">
-      <div className="slawk-editor neu-raised rounded-[20px] px-1 pt-1">
+      <div className="slawk-editor rounded-2xl border border-slack-border bg-white shadow-[var(--shadow-card)] transition-shadow focus-within:border-slack-border-dark focus-within:shadow-[var(--shadow-card-hover)]">
         <FormatToolbar onApplyFormat={editor.applyFormat} />
         <FilePreview files={editor.pendingFiles} onRemove={editor.removePendingFile} />
 
@@ -220,7 +220,7 @@ export const MessageInput = React.memo(function MessageInput({ placeholder, onSe
               className={cn(
                 'flex h-8 items-center justify-center rounded-l-full pl-3 pr-2 transition-all',
                 hasContent
-                  ? 'bg-slack-btn text-white hover:bg-slack-btn-hover shadow-[3px_3px_8px_var(--neu-dark),-3px_-3px_8px_var(--neu-light)]'
+                  ? 'bg-slack-btn text-white hover:bg-slack-btn-hover'
                   : 'text-slack-disabled',
               )}
             >

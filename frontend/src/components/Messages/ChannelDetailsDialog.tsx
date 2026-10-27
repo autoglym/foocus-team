@@ -60,7 +60,7 @@ export function ChannelDetailsDialog({ channel, open, readOnly, onClose }: Chann
         role="dialog"
         aria-modal="true"
         aria-labelledby="channel-details-title"
-        className="w-full max-w-[520px] rounded-[24px] neu-dialog"
+        className="w-full max-w-[520px] rounded-[24px] surface-dialog"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 pt-5">
@@ -87,7 +87,7 @@ export function ChannelDetailsDialog({ channel, open, readOnly, onClose }: Chann
               placeholder="What's the team working on right now?"
               disabled={readOnly}
               autoFocus={!readOnly}
-              className="w-full rounded-xl neu-inset px-4 py-2.5 text-[15px] text-slack-primary outline-none focus:ring-2 focus:ring-slack-btn/40 disabled:opacity-70"
+              className="w-full rounded-xl surface-well px-4 py-2.5 text-[15px] text-slack-primary outline-none focus:ring-2 focus:ring-slack-btn/40 disabled:opacity-70"
             />
           </div>
 
@@ -104,7 +104,7 @@ export function ChannelDetailsDialog({ channel, open, readOnly, onClose }: Chann
               placeholder="What is this channel for?"
               rows={4}
               disabled={readOnly}
-              className="w-full resize-none rounded-xl neu-inset px-4 py-2.5 text-[15px] text-slack-primary outline-none focus:ring-2 focus:ring-slack-btn/40 disabled:opacity-70"
+              className="w-full resize-none rounded-xl surface-well px-4 py-2.5 text-[15px] text-slack-primary outline-none focus:ring-2 focus:ring-slack-btn/40 disabled:opacity-70"
             />
           </div>
 

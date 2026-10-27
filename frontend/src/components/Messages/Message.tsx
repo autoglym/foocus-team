@@ -80,6 +80,23 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
     measureContent();
   }, [message.content, measureContent]);
 
+  // Re-measure when the width changes (layout settling, fonts loading, window
+  // resizes); a single measurement at mount can see a too-narrow container and
+  // collapse one-line messages
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    let lastWidth = el.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth !== lastWidth) {
+        lastWidth = el.clientWidth;
+        measureContent();
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [measureContent]);
+
   const formattedTime = format(message.createdAt, 'h:mm a');
 
   const handleEdit = () => {
@@ -243,7 +260,7 @@ export function Message({ message, showAvatar, isCompact, onOpenThread, readOnly
               <div
                 key={file.id}
                 data-testid="message-file"
-                className="rounded-2xl neu-raised-sm overflow-hidden"
+                className="rounded-2xl surface-card-sm overflow-hidden"
               >
                 {file.mimetype.startsWith('audio/') || (file.mimetype === 'video/webm' && file.originalName.startsWith('voice-message')) ? (
                   <div className="px-3 py-2.5">

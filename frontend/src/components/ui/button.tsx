@@ -9,14 +9,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-slack-btn text-white shadow-[4px_4px_10px_var(--neu-dark),-4px_-4px_10px_var(--neu-light)] hover:bg-slack-btn-hover active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.25)]',
+          'bg-slack-btn text-white shadow-[0_1px_2px_rgba(15,17,24,0.12)] hover:bg-slack-btn-hover active:translate-y-px',
         destructive:
           'bg-red-600 text-white shadow-sm hover:bg-red-700',
         outline:
           'border border-slack-primary bg-transparent shadow-sm hover:bg-gray-100',
         secondary:
           'bg-gray-100 text-slack-primary shadow-sm hover:bg-gray-200',
-        ghost: 'hover:neu-raised-sm active:neu-inset-sm',
+        ghost: 'text-slack-primary hover:bg-slack-hover active:bg-slack-active-tab',
         link: 'text-slack-link underline-offset-4 hover:underline',
         toolbar:
           'rounded text-slack-secondary hover:bg-slack-hover hover:text-slack-primary',

@@ -64,7 +64,7 @@ export function RegisterPage() {
       </div>
 
       {/* Register Form */}
-      <div className="w-full max-w-[420px] rounded-[28px] neu-raised p-8">
+      <div className="w-full max-w-[420px] rounded-[28px] surface-card p-8">
         {/* Invite Banner */}
         {inviteCode && inviteValid === true && (
           <div className="mb-4 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700">

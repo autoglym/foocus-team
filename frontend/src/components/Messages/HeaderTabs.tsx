@@ -25,7 +25,7 @@ export function HeaderTabs({ showPins, showFiles, onTogglePins, onToggleFiles, t
   return (
     <div className="flex items-center gap-0.5 px-4 pb-[6px]">
       {channelId !== undefined && (
-        <div className="mr-2 flex items-center gap-0.5 rounded-full neu-inset-sm p-[3px]" role="tablist" aria-label="Channel view">
+        <div className="mr-2 flex items-center gap-0.5 rounded-full surface-well-sm p-[3px]" role="tablist" aria-label="Channel view">
           {([
             { id: 'messages', label: 'Messages', icon: MessageSquare, to: `/c/${channelId}` },
             { id: 'docs', label: 'Docs', icon: NotebookText, to: `/c/${channelId}/docs` },
@@ -38,7 +38,7 @@ export function HeaderTabs({ showPins, showFiles, onTogglePins, onToggleFiles, t
               onClick={() => view !== tab.id && navigate(tab.to)}
               className={cn(
                 'flex items-center gap-1 rounded-full px-3 py-[3px] text-[13px] transition-all',
-                view === tab.id ? 'neu-raised-sm font-medium text-slack-primary' : 'text-slack-secondary hover:text-slack-primary'
+                view === tab.id ? 'surface-card-sm font-medium text-slack-primary' : 'text-slack-secondary hover:text-slack-primary'
               )}
             >
               <tab.icon className="h-[14px] w-[14px]" />

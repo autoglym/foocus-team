@@ -25,7 +25,7 @@ export function MessageToolbar({
     <div
       data-testid={testIdPrefix ? `${testIdPrefix}-message-toolbar` : undefined}
       className={cn(
-        'flex items-center gap-0.5 rounded-xl neu-raised-sm p-1',
+        'flex items-center gap-0.5 rounded-xl surface-card-sm p-1',
         className,
       )}
       onTouchStart={(e) => e.stopPropagation()}

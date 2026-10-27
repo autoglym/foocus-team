@@ -103,7 +103,7 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
 
   return (
     <div
-      className={cn('relative flex min-h-0 flex-1 flex-col bg-slack-surface', dragOver && 'ring-2 ring-inset ring-slack-btn/50')}
+      className={cn('relative flex min-h-0 flex-1 flex-col bg-slack-canvas', dragOver && 'ring-2 ring-inset ring-slack-btn/50')}
       onDragOver={(e) => { if (!readOnly && !showTrash && e.dataTransfer.types.includes('Files')) { e.preventDefault(); setDragOver(true); } }}
       onDragLeave={(e) => { if (e.currentTarget === e.target) setDragOver(false); }}
       onDrop={(e) => {
@@ -147,7 +147,7 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
                       onFocus={(e) => e.currentTarget.select()}
                       aria-label="Folder name"
                       size={Math.max(renaming.name.length, 6)}
-                      className="rounded-lg neu-inset-sm px-2 py-1 font-heading text-[15px] font-bold tracking-tight text-slack-primary outline-none"
+                      className="rounded-lg surface-well-sm px-2 py-1 font-heading text-[15px] font-bold tracking-tight text-slack-primary outline-none"
                     />
                   </form>
                 ) : (
@@ -178,14 +178,14 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
                   <Plus className="mr-1 h-4 w-4" /> New document
                 </Button>
                 {showTemplates && (
-                  <div className="absolute right-0 top-11 z-30 w-[300px] space-y-1 rounded-2xl neu-raised p-2" role="menu">
+                  <div className="absolute right-0 top-11 z-30 w-[300px] space-y-1 rounded-xl surface-pop p-2" role="menu">
                     {DOC_TEMPLATES.map((t) => (
                       <button
                         key={t.id}
                         role="menuitem"
                         data-testid={`template-${t.id}`}
                         onClick={() => handleNewDocument(t.id)}
-                        className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:neu-raised-sm"
+                        className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left hover:bg-slack-hover"
                       >
                         <FileText className="mt-0.5 h-4 w-4 flex-shrink-0 text-slack-btn" />
                         <span>
@@ -214,7 +214,7 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
             </>
           )}
           <Button variant="ghost" size="icon-sm" title={showTrash ? 'Back to documents' : 'Trash'} aria-label="Trash"
-            onClick={() => setParams(showTrash ? {} : { view: 'trash' })} className={showTrash ? 'neu-inset-sm' : ''}>
+            onClick={() => setParams(showTrash ? {} : { view: 'trash' })} className={showTrash ? 'surface-well-sm' : ''}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -231,7 +231,7 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
           <div className="space-y-2.5">
             {newFolderName !== null && (
               <form
-                className="flex items-center gap-3 rounded-2xl neu-inset px-4 py-2.5"
+                className="flex items-center gap-3 rounded-2xl surface-well px-4 py-2.5"
                 onSubmit={(e) => {
                   e.preventDefault();
                   const name = newFolderName.trim();
@@ -264,7 +264,7 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
                     onClick={(e) => e.stopPropagation()}>
                     <input autoFocus value={renaming.name} onChange={(e) => setRenaming({ id: f.id, name: e.target.value.slice(0, 120) })}
                       onKeyDown={(e) => e.key === 'Escape' && setRenaming(null)} onBlur={() => setRenaming(null)}
-                      aria-label="Folder name" className="w-full rounded-lg neu-inset-sm px-2 py-0.5 text-[15px] outline-none" />
+                      aria-label="Folder name" className="w-full rounded-lg surface-well-sm px-2 py-0.5 text-[15px] outline-none" />
                   </form>
                 ) : f.name}
                 meta={`${f._count.documents} ${f._count.documents === 1 ? 'document' : 'documents'} · ${f._count.files} ${f._count.files === 1 ? 'file' : 'files'}${f._count.children ? ` · ${f._count.children} ${f._count.children === 1 ? 'folder' : 'folders'}` : ''}`}
@@ -312,7 +312,7 @@ export function ChannelLibrary({ channelId }: ChannelLibraryProps) {
             ))}
 
             {isEmpty && newFolderName === null && (
-              <div className="flex flex-col items-center gap-2 rounded-[28px] neu-inset px-6 py-14 text-center">
+              <div className="flex flex-col items-center gap-2 rounded-[28px] surface-well px-6 py-14 text-center">
                 <FileText className="h-8 w-8 text-slack-hint" />
                 <p className="font-heading text-[17px] font-bold text-slack-primary">{folderId ? 'This folder is empty' : 'No documents yet'}</p>
                 <p className="max-w-[380px] text-[14px] text-slack-secondary">
@@ -358,7 +358,7 @@ function Row({ icon, title, meta, href, externalHref, onOpen, onMenu, menuOpen, 
 }) {
   const body = (
     <>
-      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl neu-inset-sm">{icon}</span>
+      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl surface-well-sm">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-medium text-slack-primary">{title}</span>
         <span className="block truncate text-[12px] text-slack-hint">{meta}</span>
@@ -367,7 +367,7 @@ function Row({ icon, title, meta, href, externalHref, onOpen, onMenu, menuOpen, 
   );
   const rowClass = 'flex min-w-0 flex-1 items-center gap-3 text-left';
   return (
-    <div data-testid={testId} className="relative flex items-center gap-2 rounded-2xl neu-raised-sm px-3 py-2.5 transition-shadow hover:shadow-[6px_6px_14px_var(--neu-dark),-6px_-6px_14px_var(--neu-light)]">
+    <div data-testid={testId} className="relative flex items-center gap-2 rounded-2xl surface-card-sm px-3 py-2.5 transition-shadow hover:border-slack-border-dark hover:shadow-[var(--shadow-card-hover)]">
       {href ? <Link to={href} className={rowClass}>{body}</Link>
         : externalHref ? <a href={externalHref} target="_blank" rel="noopener noreferrer" className={rowClass}>{body}</a>
         : <button type="button" onClick={onOpen} className={rowClass}>{body}</button>}
@@ -377,10 +377,10 @@ function Row({ icon, title, meta, href, externalHref, onOpen, onMenu, menuOpen, 
         </Button>
       )}
       {menuOpen && (
-        <div className="absolute right-2 top-12 z-20 w-[190px] rounded-2xl neu-raised p-1.5" role="menu" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute right-2 top-12 z-20 w-[190px] rounded-xl surface-pop p-1.5" role="menu" onClick={(e) => e.stopPropagation()}>
           {actions.map((a) => (
             <button key={a.label} role="menuitem" onClick={() => { onMenu?.(); a.onClick(); }}
-              className={cn('flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-[14px] hover:neu-raised-sm', a.danger ? 'text-slack-error' : 'text-slack-primary')}>
+              className={cn('flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-left text-[14px] hover:bg-slack-hover', a.danger ? 'text-slack-error' : 'text-slack-primary')}>
               <a.icon className="h-4 w-4" /> {a.label}
             </button>
           ))}
@@ -393,13 +393,13 @@ function Row({ icon, title, meta, href, externalHref, onOpen, onMenu, menuOpen, 
 function TrashList({ trash, onRestore }: { trash: DocSummary[] | null; onRestore: (id: number) => void }) {
   if (!trash) return <p className="py-6 text-[14px] text-slack-hint">Loading…</p>;
   if (trash.length === 0) {
-    return <p className="rounded-[28px] neu-inset px-6 py-12 text-center text-[14px] text-slack-secondary">The trash is empty.</p>;
+    return <p className="rounded-[28px] surface-well px-6 py-12 text-center text-[14px] text-slack-secondary">The trash is empty.</p>;
   }
   return (
     <div className="space-y-2.5">
       {trash.map((d) => (
-        <div key={d.id} className="flex items-center gap-3 rounded-2xl neu-raised-sm px-3 py-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl neu-inset-sm"><FileText className="h-5 w-5 text-slack-hint" /></span>
+        <div key={d.id} className="flex items-center gap-3 rounded-2xl surface-card-sm px-3 py-2.5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl surface-well-sm"><FileText className="h-5 w-5 text-slack-hint" /></span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[15px] font-medium text-slack-primary">{d.title}</span>
             <span className="block text-[12px] text-slack-hint">Deleted {d.deletedAt ? formatDistanceToNow(new Date(d.deletedAt), { addSuffix: true }) : ''}</span>
@@ -438,18 +438,18 @@ function MoveDialog({ channelId, target, currentFolderId, onClose, onMove }: {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onMouseDown={onClose}>
-      <div className="w-full max-w-[440px] rounded-[24px] neu-dialog p-6" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="Move to folder">
+      <div className="w-full max-w-[440px] rounded-[24px] surface-dialog p-6" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="Move to folder">
         <h2 className="mb-1 font-heading text-[20px] font-bold text-slack-primary">Move “{target.name}”</h2>
         <p className="mb-4 text-[13px] text-slack-hint">Choose a folder in this channel.</p>
-        <div className="max-h-[320px] space-y-1 overflow-y-auto rounded-2xl neu-inset p-2">
+        <div className="max-h-[320px] space-y-1 overflow-y-auto rounded-2xl surface-well p-2">
           <button onClick={() => onMove(null)} disabled={currentFolderId === null && target.kind !== 'folder'}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] hover:neu-raised-sm disabled:opacity-50">
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[14px] hover:bg-slack-hover disabled:opacity-50">
             <FileText className="h-4 w-4 text-slack-btn" /> Docs (top level)
           </button>
           {rows.map((r) => (
             <button key={r.id} onClick={() => onMove(r.id)} disabled={r.id === currentFolderId && target.kind !== 'folder'}
               style={{ paddingLeft: 12 + r.depth * 18 }}
-              className="flex w-full items-center gap-2 rounded-xl py-2 pr-3 text-left text-[14px] hover:neu-raised-sm disabled:opacity-50">
+              className="flex w-full items-center gap-2 rounded-xl py-2 pr-3 text-left text-[14px] hover:bg-slack-hover disabled:opacity-50">
               <Folder className="h-4 w-4 text-[#D4A93A]" /> {r.name}
             </button>
           ))}

@@ -30,7 +30,7 @@ export function SidebarItem({
         'flex w-full items-center gap-2 h-[30px] text-[15px] transition-colors duration-150 rounded-[10px] text-left',
         'mx-2 w-[calc(100%-16px)] px-3',
         isActive
-          ? 'bg-slack-sidebar neu-navy-inset text-[#9CCBEA] font-semibold'
+          ? 'nav-pill text-white font-semibold'
           : hasUnread
             ? 'text-white font-semibold hover:bg-white/[0.06]'
             : 'text-white/65 font-normal hover:bg-white/[0.06] hover:text-white/90'

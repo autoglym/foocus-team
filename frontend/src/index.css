@@ -29,11 +29,12 @@
   --color-slack-link: #2A5A76;
   --color-slack-link-hover: #1F4459;
 
-  /* Surface / Background — Foocus parchment. The content area sits on one
-     soft "fog" tone so neumorphic (extruded / pressed) elements read. */
-  --color-slack-surface: #ECEAE4;
-  --color-slack-hover: #F3F1EC;
-  --color-slack-active-tab: #E2E0D9;
+  /* Surface / Background — white content, warm light canvas behind cards */
+  --color-slack-surface: #FFFFFF;
+  /* Page background for Docs / Dashboard, behind white cards */
+  --color-slack-canvas: #F6F6F3;
+  --color-slack-hover: #F5F5F2;
+  --color-slack-active-tab: #ECEBE7;
   --color-slack-pinned: #FCF6E5;
   --color-slack-success: #DBECE4;
   --color-slack-highlight: #EAF0F4;
@@ -88,40 +89,44 @@
 }
 
 /* ──────────────────────────────────────────────────────────
-   Neumorphism ("soft UI"). Everything sits on ONE surface colour and
-   is extruded from it (raised) or pressed into it (inset). Light comes
-   from the top left: white highlight up-left, warm shadow down-right
-   (Foocus muted). Raised elements use the surface colour, never white.
-   The navy variants do the same on the dark sidebar.
+   Surfaces — clean and flat. Cards are white with a hairline border and a
+   very soft shadow; wells (inputs, empty states) are a light tint with a
+   hairline border; nav pills are a translucent white on the navy sidebar.
    ────────────────────────────────────────────────────────── */
 :root {
-  --neu-light: rgba(255, 255, 255, 0.95);
-  --neu-dark: rgba(166, 158, 140, 0.55);
-  --neu-navy-light: rgba(46, 52, 68, 0.9);
-  --neu-navy-dark: rgba(0, 0, 0, 0.6);
+  --shadow-card: 0 1px 2px rgba(15, 17, 24, 0.04), 0 1px 1px rgba(15, 17, 24, 0.02);
+  --shadow-card-hover: 0 4px 14px -4px rgba(15, 17, 24, 0.12);
+  --shadow-pop: 0 12px 32px -8px rgba(15, 17, 24, 0.18), 0 2px 6px rgba(15, 17, 24, 0.06);
 }
 
-@utility neu-raised {
-  background-color: var(--color-slack-surface);
-  box-shadow: 9px 9px 18px var(--neu-dark), -9px -9px 18px var(--neu-light);
+@utility surface-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-slack-border);
+  box-shadow: var(--shadow-card);
 }
-@utility neu-raised-sm {
-  background-color: var(--color-slack-surface);
-  box-shadow: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
+@utility surface-card-sm {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-slack-border);
 }
-@utility neu-inset {
-  background-color: var(--color-slack-surface);
-  box-shadow: inset 4px 4px 8px var(--neu-dark), inset -4px -4px 8px var(--neu-light);
+@utility surface-well {
+  background-color: var(--color-slack-canvas);
+  border: 1px solid var(--color-slack-border);
 }
-@utility neu-inset-sm {
-  background-color: var(--color-slack-surface);
-  box-shadow: inset 2px 2px 5px var(--neu-dark), inset -2px -2px 5px var(--neu-light);
+@utility surface-well-sm {
+  background-color: var(--color-slack-canvas);
+  border: 1px solid transparent;
 }
-@utility neu-navy-raised {
-  box-shadow: 4px 4px 9px var(--neu-navy-dark), -3px -3px 8px var(--neu-navy-light);
+@utility surface-pop {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-slack-border);
+  box-shadow: var(--shadow-pop);
 }
-@utility neu-navy-inset {
-  box-shadow: inset 3px 3px 7px var(--neu-navy-dark), inset -3px -3px 7px var(--neu-navy-light);
+@utility surface-dialog {
+  background-color: #FFFFFF;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.35);
+}
+@utility nav-pill {
+  background-color: rgba(255, 255, 255, 0.10);
 }
 
 /* Non-color design tokens */
@@ -200,10 +205,7 @@ body {
 }
 
 .slawk-editor .ql-container {
-  margin: 2px 6px 6px;
-  border-radius: 14px;
-  background-color: var(--color-slack-surface);
-  box-shadow: inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
+  background-color: transparent;
 }
 
 .slawk-editor .ql-editor {
@@ -310,9 +312,3 @@ body {
   --bn-font-family: var(--font-sans);
 }
 
-/* Dialogs sit on a dark backdrop, where the neumorphic white highlight would
-   glow; they keep the surface colour with a deep drop shadow instead. */
-@utility neu-dialog {
-  background-color: var(--color-slack-surface);
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.7), 0 28px 70px -12px rgba(0, 0, 0, 0.5);
-}

@@ -96,7 +96,7 @@ export function HeaderSearch({ testIdPrefix = '' }: HeaderSearchProps) {
         value={searchQuery}
         onChange={handleSearchChange}
         onKeyDown={handleSearchKeyDown}
-        className="h-[30px] w-[160px] rounded-full neu-inset border-0 pl-8 pr-3 text-[13px] placeholder:text-slack-secondary focus:outline-none focus:ring-2 focus:ring-slack-btn/40 focus:w-[240px] transition-all"
+        className="h-[30px] w-[160px] rounded-full surface-well border-0 pl-8 pr-3 text-[13px] placeholder:text-slack-secondary focus:outline-none focus:ring-2 focus:ring-slack-btn/40 focus:w-[240px] transition-all"
       />
       {showResults && (
         <div data-testid={`${prefix}search-results-dropdown`} className="absolute right-0 top-8 z-50 w-[360px] max-h-[400px] overflow-y-auto rounded-lg border border-slack-border bg-white shadow-lg">
